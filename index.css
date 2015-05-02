@@ -1,0 +1,184 @@
+/* GENERAL ******************************************************/
+body {
+   background-color: rgb(235,235,235); 
+   /* background-color: rgb(250,250,250); */
+   font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+   color: rgb(122,122,122);
+}
+h1 {
+   font-size: 30px;
+   font-weight: bold;
+   line-height: 100%;
+   cursor: default;
+}
+p {
+   font-size: 16px;
+   line-height: 100%;
+   width: 580px;
+   cursor: default;
+}
+div {
+   line-height: 100%;
+   cursor: default;
+}
+a {
+   color: rgb(180,180,180); 
+}
+a:hover {
+   color: rgb(122,122,122); 
+}
+.description {
+   font-size: 12px; 
+   fill: rgb(122,122,122);
+}
+.annotation {
+   font-size: 12px; 
+   fill: rgb(122,122,122);
+   stroke: none;
+   color: rgb(122,122,122);
+   line-height: 100%;
+   cursor: default;
+}
+text {
+   /* Make unselectable */
+   -moz-user-select: -moz-none;
+   -khtml-user-select: none;
+   -webkit-user-select: none;
+   /*
+     Introduced in IE 10.
+     See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+   */
+   -ms-user-select: none;
+   user-select: none;
+
+   cursor: default;
+}
+
+.axis text {
+   font-size: 14px;
+   fill: rgb(122,122,122);
+}
+.label {
+   font-size: 16px;
+   fill: rgb(122,122,122);
+}
+.axis path,
+.axis line {
+   fill: none;
+   stroke: rgb(122,122,122); 
+   stroke-width: 1px;
+   shape-rendering: crispEdges;
+}
+.base {
+  fill: rgb(250,250,250);
+}
+
+
+/* PICKER **********************************************************/
+#svg_picker {
+   /*background-color: pink;*/
+} 
+text.picker {
+   font-size:20px;
+   fill: rgb(122,122,122);
+} 
+text.picker.button {
+   cursor: pointer;
+} 
+rect.picker.button {
+   stroke-width: 1px;
+   stroke: rgb(122,122,122);
+   cursor: pointer;
+}
+
+
+/* BAR **********************************************************/
+#svg_bar {
+   /*background-color: lightblue;*/
+} 
+.bar.error {
+   stroke-width: 2px;
+   stroke: rgb(122,122,122);
+}
+.bar.rects {
+   fill: rgb(0,130,65);
+}
+.map.annotation {
+   background-color: rgb(250,250,250);
+}
+
+/* MAP **********************************************************/
+#svg_map {
+   /*background-color: yellow;*/
+} 
+.map.borough {
+   fill: white;
+   stroke: rgb(122,122,122);
+   stroke-width: 1px;    
+}
+.map.annotation {
+   background-color: rgb(250,250,250);
+}
+.map path {
+   cursor: pointer;
+}
+.map.return.text {
+   font-size:20px;
+   fill: rgb(122,122,122);
+   cursor: pointer;
+} 
+.map.return.rect {
+   stroke-width: 1px;
+   stroke: rgb(122,122,122);
+   cursor: pointer;
+}
+.map.borough.info {
+   font-size:20px;
+   font-weight: bold;
+   cursor: pointer;
+   fill: rgb(122,122,122);
+   stroke: none;
+}
+
+
+/* PLOT ********************************************************/
+#svg_plot {
+   /*background-color: rgb(230,255,242);*/ 
+} 
+.plot.line {
+   fill: none;
+   stroke-width: 2px;
+   stroke: rgb(0,130,65);
+}
+.plot.marker {
+   stroke: rgb(122,122,122); 
+   stroke-width: 2px;
+}
+.plot.points {
+   fill: rgb(0,130,65);
+}
+
+/* GRID *********************************************************/
+#svg_grid {
+   /*background-color: lightgreen;*/
+} 
+.grid.axis path {
+   fill: none;
+   stroke: none;
+}
+
+/* GRIDPLOT ********************************************************/
+#svg_gplot {
+   /*background-color: yellow;*/
+} 
+.gplot.line {
+   fill: none;
+   stroke-width: 2px;
+   /* stroke: rgb(0,130,65); */
+}
+.gplot.line.highlight {
+   stroke-width: 5px;
+   stroke: rgb(135,206,250);
+}
+
+
