@@ -8,6 +8,8 @@ body {
 a,
 a:visited {
    color: rgb(0,0,0);
+   border: 0;
+   outline: none;
 }
 a:hover {
    cursor: pointer;

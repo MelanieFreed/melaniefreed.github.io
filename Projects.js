@@ -2,8 +2,12 @@
 /////////////////////////////////////////////////////////////////////  
 // PROJECTS OBJECT
 ///////////////////////////////////////////////////////////////////// 
-var Projects = function(PageMasterHandle,AboutPageHandle)
+var Projects = function(PageMasterHandle,AboutPageHandle,browser)
 {
+
+   // Save browser info
+   this.browser=browser;
+
    // Define Project Data
    this.defineProjects();
 
@@ -222,7 +226,7 @@ Projects.prototype = {
            thishandle.svg.selectAll(".projects.annotation")
                      .html(d.info);
            // Jump circle to front
-           this.parentNode.appendChild(this);
+           if (this.browser != "IE") this.parentNode.appendChild(this);
            // Make all other circles fade
            thishandle.svg.selectAll(".projects.node.circle")
                      .style("opacity",function(c){

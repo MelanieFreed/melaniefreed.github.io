@@ -2,8 +2,12 @@
 /////////////////////////////////////////////////////////////////////  
 // PAPERS OBJECT
 ///////////////////////////////////////////////////////////////////// 
-var Papers = function(PageMasterHandle,AboutPageHandle)
+var Papers = function(PageMasterHandle,AboutPageHandle,browser)
 {
+
+   // Save browser info
+   this.browser=browser;
+
    // Define Paper Data
    this.definePapers();
 
@@ -496,7 +500,7 @@ Papers.prototype = {
            thishandle.svg.selectAll(".papers.annotation")
                      .html(d.info);
            // Jump circle to front
-           this.parentNode.appendChild(this);
+           if (this.browser != "IE") this.parentNode.appendChild(this);
            // Make all other circles fade
            thishandle.svg.selectAll(".papers.node.circle")
                      .style("opacity",function(c){
