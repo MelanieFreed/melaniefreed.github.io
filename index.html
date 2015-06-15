@@ -4,11 +4,26 @@
       <!------------------------------------------------------------------>
       <!-- BEGIN HEADER                                                 -->
       <!------------------------------------------------------------------>
-      <meta charset="utf-8">
-      <title>Collisions with Pedestrians in NYC</title>
-      <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
-      <script src="http://d3js.org/topojson.v1.min.js"></script>
+      <!-- My Style Sheet -->      
       <link rel="stylesheet" type="text/css" href="index.css">
+      <!-- Google Fonts -->
+      <link href='http://fonts.googleapis.com/css?family=Noto+Sans:400,700' rel='stylesheet' type='text/css'>
+      <meta charset="utf-8">
+      <title>Melanie Freed</title>
+      <!-- d3.js -->
+      <!-- <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script> -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+      <script src="http://d3js.org/topojson.v1.min.js"></script>
+      <!-- jQuery -->
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+
+      <!-- my Javascript objects -->
+      <script type="text/javascript" src="PageMaster.js"></script>
+      <script type="text/javascript" src="TreeDrawing.js"></script>
+      <script type="text/javascript" src="AboutPage.js"></script>
+      <script type="text/javascript" src="Projects.js"></script> 
+      <script type="text/javascript" src="Papers.js"></script>
+
       <!------------------------------------------------------------------>
       <!-- END HEADER                                                   -->
       <!------------------------------------------------------------------>
@@ -17,1537 +32,208 @@
       <!------------------------------------------------------------------>
       <!-- BEGIN BODY                                                   -->
       <!------------------------------------------------------------------>
-      <h1>PEDESTRIANS VERSUS CARS IN<br>NEW YORK CITY</h1>
-      <p>In January 2014, Mayor de Blasio launched a working group to implement <a href="http://www.nyc.gov/html/visionzero/pages/home/home.shtml">Vision Zero</a> and prevent pedestrian fatalities.  This report examines data available from <a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95">NYC OpenData</a> on motor vehicle collisions as reported by the New York Police Department from July 2012 to March 2015.</p>     
 
       <script type="text/javascript">
 
          /////////////////////////////////////////////////////////////////////  
-         // GLOBAL VARIABLES, DON'T POLLUTE THE NAME SPACE :)
+         // GLOBAL OBJECT
          ///////////////////////////////////////////////////////////////////// 
-
-         var dv={};
-         // Transition Time
-         dv.time_load=1000;
-         // Positions of Elements on Page
-         dv.width_picker=500;
-         dv.height_picker=115;
-         dv.width_map=615;
-         dv.height_map=600;
-         dv.width_map_annotation=250;
-         dv.height_map_annotation=100;
-         dv.width_plot=500.0;
-         dv.height_plot=dv.height_map*0.54;
-         dv.width_grid=(dv.width_map+dv.width_plot)/2;
-         dv.height_grid=460;
-         dv.width_gplot=(dv.width_map+dv.width_plot)-dv.width_grid;
-         dv.height_gplot=dv.height_grid-90;
-         dv.width_bar=dv.width_plot;
-         dv.height_bar=dv.height_map-dv.height_plot;
-         dv.x_map=0;
-         dv.x_map_annotation=25;
-         dv.x_plot=dv.x_map+dv.width_map;
-         dv.x_grid=dv.x_map;
-         dv.x_picker=dv.width_map;
-         dv.x_bar=dv.x_map+dv.width_map;
-         dv.y_map=160;
-         dv.y_map_annotation=50;
-         dv.y_grid=dv.y_map+dv.height_map;
-         dv.y_bar=dv.y_map;
-         dv.y_picker=dv.y_bar-dv.height_picker;
-         dv.y_plot=dv.y_bar+dv.height_bar;
-         dv.x_gplot=dv.x_grid+dv.width_grid;
-         dv.y_gplot=dv.y_grid;
-
-         // Base Properties
-         dv.basepad=10;
-         dv.baserad=15;
-
-         // Adjust <h1> <p> spacing
-         d3.select("h1").attr("style","margin: "+(dv.basepad*2)+"px 0px 0px "+(dv.basepad*2)+"px;");
-         d3.select("p").attr("style","margin: "+(dv.basepad)+"px 0px 0px "+(dv.basepad*2)+"px;");
-
-         // Picker       
-         dv.tpad_picker=dv.basepad*4;
-         dv.tpadspc_picker=dv.basepad;
-         dv.pad_picker=dv.basepad*3;
-         dv.rad_picker=dv.baserad; 
-         dv.height_picker_button=40;     
-         dv.svg_picker=d3.select("body").append("svg")
-                         .attr("class","picker")
-                         .attr("id","svg_picker")
-                         .attr("width",dv.width_picker)
-                         .attr("height",dv.height_picker)
-                         .attr("style","position:absolute; top:"+dv.y_picker+"px; left:"+dv.x_picker+"px;");
-         dv.svg_picker.append("rect").attr("class","base")
-                      .attr("x",dv.basepad).attr("y",dv.basepad)
-                      .attr("width",dv.width_picker-dv.basepad*2).attr("height",dv.height_picker-dv.basepad*2)
-                      .attr("rx",dv.baserad).attr("ry",dv.baserad);
-
-         // Map
-         dv.x_map_return=50;
-         dv.y_map_return=200;
-         dv.width_map_return=150;
-         dv.height_map_return=dv.height_picker_button;
-         dv.svg_map=d3.select("body").append("svg")
-                      .attr("class","map")
-                      .attr("id","svg_map")
-                      .attr("width",dv.width_map)
-                      .attr("height",dv.height_map)
-                      .attr("style","position:absolute; top:"+dv.y_map+"px; left:"+dv.x_map+"px;");
-         dv.svg_map.append("rect").attr("class","base")
-                   .attr("x",dv.basepad*2).attr("y",dv.basepad)
-                   .attr("width",dv.width_map-dv.basepad*3).attr("height",dv.height_map-dv.basepad*2)
-                   .attr("rx",dv.baserad).attr("ry",dv.baserad);
-
-         // Bar
-         dv.pad_top_bar=40;
-         dv.pad_bottom_bar=155;
-         dv.pad_right_bar=50;
-         dv.pad_left_bar=85;
-         dv.pad_xaxis_bar=115;
-         dv.pad_title_bar=35;
-         dv.svg_bar=d3.select("body")
-                      .append("svg")
-                      .attr("id","svg_bar") 
-                      .attr("width",dv.width_bar)
-                      .attr("height",dv.height_bar)
-                      .attr("style","position:absolute; top:"+dv.y_bar+"px; left:"+dv.x_bar+"px;");
-         dv.svg_bar.append("rect").attr("class","base")
-                   .attr("x",dv.basepad).attr("y",dv.basepad)
-                   .attr("width",dv.width_bar-dv.basepad*2).attr("height",dv.height_bar-dv.basepad*2)
-                   .attr("rx",dv.baserad).attr("ry",dv.baserad);
-
-         // Plot
-         dv.pad_top_plot=dv.basepad*4;
-         dv.pad_bottom_plot=90;
-         dv.pad_right_plot=dv.pad_right_bar;
-         dv.pad_left_plot=100;
-         dv.pad_xaxis_plot=40;
-         dv.pad_yaxis_plot=55;
-         dv.svg_plot=d3.select("body")
-                       .append("svg")
-                       .attr("id","svg_plot") 
-                       .attr("width",dv.width_plot)
-                       .attr("height",dv.height_plot)
-                       .attr("style","position:absolute; top:"+dv.y_plot+"px; left:"+dv.x_plot+"px;");
-         dv.svg_plot.append("rect").attr("class","base")
-                    .attr("x",dv.basepad).attr("y",dv.basepad)
-                    .attr("width",dv.width_plot-dv.basepad*2).attr("height",dv.height_plot-dv.basepad*2)
-                    .attr("rx",dv.baserad).attr("ry",dv.baserad);
-
-         // Grid
-         dv.pad_top_grid=dv.basepad*7;
-         dv.pad_bottom_grid=160;
-         dv.pad_right_grid=50;
-         dv.pad_left_grid=110;
-         dv.pad_xaxis_grid=50;
-         dv.pad_yaxis_grid=55;
-         dv.xr=(dv.width_grid-dv.pad_right_grid-dv.pad_left_grid)/24.0/2.0,
-         dv.yr=(dv.height_grid-dv.pad_bottom_grid-dv.pad_top_grid)/12.0/2.0, 
-         dv.maxr=dv.xr;
-         dv.svg_grid=d3.select("body")
-                       .append("svg")
-                       .attr("id","svg_grid") 
-                       .attr("width",dv.width_grid)
-                       .attr("height",dv.height_grid)
-                       .attr("style","position:absolute; top:"+dv.y_grid+"px; left:"+dv.x_grid+"px;");
-         dv.svg_grid.append("rect").attr("class","base")
-                    .attr("x",dv.basepad*2).attr("y",dv.basepad)
-                    .attr("width",dv.width_grid-dv.basepad*3).attr("height",dv.height_grid-dv.basepad*2)
-                    .attr("rx",dv.baserad).attr("ry",dv.baserad);
-
-         // Gridplot
-         dv.pad_top_gplot=dv.pad_top_grid;
-         dv.pad_bottom_gplot=dv.pad_bottom_grid-90;
-         dv.pad_right_gplot=50;
-         dv.pad_left_gplot=100;
-         dv.pad_xaxis_gplot=40;
-         dv.pad_yaxis_gplot=55;
-         dv.svg_gplot=d3.select("body")
-                        .append("svg")
-                        .attr("id","svg_gplot") 
-                        .attr("width",dv.width_gplot)
-                        .attr("height",dv.height_gplot)
-                        .attr("style","position:absolute; top:"+dv.y_gplot+"px; left:"+dv.x_gplot+"px;");
-         dv.svg_gplot.append("rect").attr("class","base")
-                     .attr("x",dv.basepad).attr("y",dv.basepad)
-                     .attr("width",dv.width_gplot-dv.basepad*2).attr("height",dv.height_gplot-dv.basepad*2)
-                     .attr("rx",dv.baserad).attr("ry",dv.baserad);
-
-         // Current State of Data You're Displaying
-         dv.tflag_set=0; // Numbers
-         dv.tbname_set=""; // New York City
-       
-
-         /////////////////////////////////////////////////////////////////////  
-         // LOAD ALL DATA YOU NEED AND KEEP OPEN UNTIL SCRIPT IS CLOSED
-         // THAT WAY YOU DON'T HAVE TO KEEP LOADING IT BACK IN
-         /////////////////////////////////////////////////////////////////////  
-         d3.json("nycbb_topojson.json",function(error,nyc) {
-            if (error) return console.error(error);
-         d3.csv("Clean_NYPD_Collisions_OverallAvg_ByBorough.csv", function(error,odata) {
-            if (error) return console.log(error);
-         d3.csv("Clean_NYPD_Collisions_ALLBOROUGHS.csv", function(error,bdata) {
-            if (error) return console.log(error);
-         d3.csv("Clean_NYPD_Collisions_ByMonthOnlyHour_withSunlight_ALLBOROUGHS.csv", function(error,gdata) {
-            if (error) return console.log(error);
-
-
-         /////////////////////////////////////////////////////////////////////  
-         // DATAPICKER
-         /////////////////////////////////////////////////////////////////////  
-         dv.svg_picker.append("text")
-                      .attr("class","picker")
-                      .attr("x",dv.pad_picker).attr("y",dv.tpad_picker)
-                      .attr("text-anchor","start")
-                      .text("Select data units:");
-         var x_button=dv.pad_picker,
-             y_button=dv.tpad_picker+dv.tpadspc_picker,
-             w_button=dv.width_picker*0.9/3-dv.pad_picker*3/2;
-         dv.svg_picker.append("rect")
-                      .attr("class","picker number button")
-                      .attr("id","pickernumberrect")
-                      .attr("x",x_button).attr("y",y_button)
-                      .attr("width",w_button).attr("height",dv.height_picker_button)
-                      .attr("rx",dv.rad_picker).attr("ry",dv.rad_picker)
-                      .attr("fill","rgb(180,180,180)")
-                      .append("title")
-                      .text("Click to display data as number of pedestrian injuries and fatalities");
-         dv.svg_picker.append("text")
-                      .attr("class","picker number button")
-                      .attr("x",x_button+w_button/2)
-                      .attr("y",y_button+dv.height_picker_button*0.64)
-                      .attr("text-anchor","middle")
-                      .text("Number")
-                      .append("title")
-                      .text("Click to display data as number of pedestrian injuries and fatalities");
-         x_button=x_button+w_button+dv.pad_picker;
-         w_button=dv.width_picker*(3-0.9)/3-dv.pad_picker*3/2;
-         dv.svg_picker.append("rect")
-                      .attr("class","picker perpop button")
-                      .attr("id","pickerperpoprect")
-                      .attr("x",x_button).attr("y",y_button)
-                      .attr("width",w_button).attr("height",dv.height_picker_button)
-                      .attr("rx",dv.rad_picker).attr("ry",dv.rad_picker)
-                      .attr("fill","rgb(250,250,250)")
-                      .append("title")
-                      .text("Click to display data as number of pedestrian injuries and fatalities per million people of the population");
-         dv.svg_picker.append("text")
-                      .attr("class","picker perpop button")
-                      .attr("x",x_button+w_button/2)
-                      .attr("y",y_button+dv.height_picker_button*0.64)
-                      .attr("text-anchor","middle")
-                      .text("Number per Million Population")
-                      .append("title")
-                      .text("Click to display data as number of pedestrian injuries and fatalities per million people of the population");
-      
-         // Picker: clicks
-         d3.selectAll(".picker.number")
-           .on("click",function(){
-              dv.tflag_set=0;
-              // Update Buttons
-              d3.selectAll("#pickernumberrect").attr("fill","rgb(180,180,180)");
-              d3.selectAll("#pickerperpoprect").attr("fill","rgb(250,250,250)");
-              // Load New Data
-              updateMapAnnotation(" ");
-              updateBarAnnotation(" ");
-              updateGridAnnotation(" ");
-              reloadMap(dv.tflag_set,nyc,odata);
-              reloadBar(dv.tbname_set,dv.tflag_set,bdata);
-              reloadPlot(dv.tbname_set,dv.tflag_set,bdata);
-              reloadGrid(dv.tbname_set,dv.tflag_set,gdata);
-              reloadGplot(dv.tbname_set,dv.tflag_set,gdata);
-           });
-         d3.selectAll(".picker.perpop")
-           .on("click",function(){
-              dv.tflag_set=1;
-              // Update Buttons
-              d3.selectAll("#pickerperpoprect").attr("fill","rgb(180,180,180)");
-              d3.selectAll("#pickernumberrect").attr("fill","rgb(250,250,250)");
-              // Load New Data
-              updateMapAnnotation("per million population ");
-              updateBarAnnotation("per million population ");
-              updateGridAnnotation("per million population ");
-              reloadMap(dv.tflag_set,nyc,odata);
-              reloadBar(dv.tbname_set,dv.tflag_set,bdata);
-              reloadPlot(dv.tbname_set,dv.tflag_set,bdata);
-              reloadGrid(dv.tbname_set,dv.tflag_set,gdata);
-              reloadGplot(dv.tbname_set,dv.tflag_set,gdata);
-           });
-
-         d3.selectAll(".picker.number")
-           .on("mouseover",function(){
-              restrokePickerBorder("number",2)
-           });
-         d3.selectAll(".picker.perpop")
-           .on("mouseover",function(){
-              restrokePickerBorder("perpop",2)
-           });
-         d3.selectAll(".picker.number")
-           .on("mouseleave",function(){
-              restrokePickerBorder("number",1)
-           });
-         d3.selectAll(".picker.perpop")
-           .on("mouseleave",function(){
-              restrokePickerBorder("perpop",1)
-           });
-
-
-         /////////////////////////////////////////////////////////////////////  
-         // MAP
-         /////////////////////////////////////////////////////////////////////  
-         var projection=d3.geo.mercator()
-                          .center([-73.94,40.70])
-                          .scale(55000)
-                          .translate([dv.width_map/2+40,dv.height_map/2+5]);
-
-         var path=d3.geo.path()
-                    .projection(projection);
-
-
-         // Draw Boroughs
-         var data_SI=topojson.feature(nyc,nyc.objects.nyc_geojson.geometries[0]),
-             data_MN=topojson.feature(nyc,nyc.objects.nyc_geojson.geometries[1]),
-             data_BX=topojson.feature(nyc,nyc.objects.nyc_geojson.geometries[2]),
-             data_BK=topojson.feature(nyc,nyc.objects.nyc_geojson.geometries[3]),
-             data_QN=topojson.feature(nyc,nyc.objects.nyc_geojson.geometries[4]);
-
-         dv.svg_map.append("path")
-                   .attr("class","map borough SI")
-                   .attr("id","mapboroughSI")
-                   .datum(data_SI)
-                   .attr("d",path);
-         dv.svg_map.append("text")
-                   .attr("class","map borough SI info")
-                   .attr("opacity","0.0")
-                   .attr("x",0)
-                   .attr("y",0)
-                   .attr("transform","translate("+path.centroid(data_SI)+")")
-                   .attr("text-anchor","middle")
-                   .text(d3.round(odata[0].AvgInjuredKilledByMonth));
-         dv.svg_map.append("path")
-                   .attr("class","map borough MN")
-                   .datum(data_MN)
-                   .attr("d",path);
-         dv.svg_map.append("text")
-                   .attr("class","map borough MN info")
-                   .attr("opacity","0.0")
-                   .attr("x",0)
-                   .attr("y",0)
-                   .attr("transform","translate("+path.centroid(data_MN)+")")
-                   .attr("text-anchor","middle")
-                   .text(d3.round(odata[1].AvgInjuredKilledByMonth));
-         dv.svg_map.append("path")
-                   .attr("class","map borough BX")
-                   .datum(data_BX)
-                   .attr("d",path);
-         dv.svg_map.append("text")
-                   .attr("class","map borough BX info")
-                   .attr("opacity","0.0")
-                   .attr("x",0)
-                   .attr("y",0)
-                   .attr("transform","translate("+path.centroid(data_BX)+")")
-                   .attr("text-anchor","middle")
-                   .text(d3.round(odata[2].AvgInjuredKilledByMonth));
-         dv.svg_map.append("path")
-                   .attr("class","map borough BK")
-                   .datum(data_BK)
-                   .attr("d",path);
-         dv.svg_map.append("text")
-                   .attr("class","map borough BK info")
-                   .attr("opacity","0.0")
-                   .attr("x",0)
-                   .attr("y",0)
-                   .attr("transform","translate("+path.centroid(data_BK)+")")
-                   .attr("text-anchor","middle")
-                   .text(d3.round(odata[3].AvgInjuredKilledByMonth));
-         dv.svg_map.append("path")
-                   .attr("class","map borough QN")
-                   .datum(data_QN)
-                   .attr("d",path);
-         dv.svg_map.append("text")
-                   .attr("class","map borough QN info")
-                   .attr("opacity","0.0")
-                   .attr("x",0)
-                   .attr("y",0)
-                   .attr("transform","translate("+path.centroid(data_QN)+")")
-                   .attr("text-anchor","middle")
-                   .text(d3.round(odata[4].AvgInjuredKilledByMonth));
-         dv.svg_map.append("rect")
-                   .attr("class","map return rect")
-                   .attr("x",dv.x_map_return).attr("y",dv.y_map_return)
-                   .attr("width",dv.width_map_return).attr("height",dv.height_map_return)
-                   .attr("rx",dv.rad_picker).attr("ry",dv.rad_picker)
-                   .attr("fill","rgb(250,250,250)")
-                   .attr("visibility","hidden")
-                   .append("title")
-                   .text("Click to return to full new york city data");
-         dv.svg_map.append("text")
-                   .attr("class","map return text")
-                   .attr("x",dv.x_map_return+dv.width_map_return/2)
-                   .attr("y",dv.y_map_return+dv.height_map_return*0.64)
-                   .attr("text-anchor","middle")
-                   .text("Return to NYC")
-                   .attr("visibility","hidden")
-                   .append("title")
-                   .text("Click to return to full new york city data");
-
-
-         // Annotation
-         dv.svg_map.append("foreignObject")
-                   .attr("class","map annotation")
-                   .attr("width",dv.width_map_annotation)
-                   .attr("height",dv.height_map_annotation)
-	                 .attr("x",dv.basepad*4)
-                   .attr("y",dv.basepad*3)
-	                 .append("xhtml:body")
-	                 .append("xhtml:div");
-         updateMapAnnotation("");
-
-         // Fill in colors 
-         reloadMap(dv.tflag_set,nyc,odata);
-
-         // Event listeners
-         d3.selectAll(".map.borough.SI")
-           .on("click",function(){
-              dv.tbname_set="SI"; //"_STATEN ISLAND";
-              restrokeMapBorder("SI",2);
-              restrokeMapBorder("MN",1);
-              restrokeMapBorder("BK",1);
-              restrokeMapBorder("QN",1);
-              restrokeMapBorder("BX",1);
-              updateTitle("STATEN ISLAND");
-              loadReturnButton("visible");
-              reloadBar(dv.tbname_set,dv.tflag_set,bdata);
-              reloadPlot(dv.tbname_set,dv.tflag_set,bdata);
-              reloadGrid(dv.tbname_set,dv.tflag_set,gdata);
-              reloadGplot(dv.tbname_set,dv.tflag_set,gdata);
-           });
-         d3.selectAll(".map.borough.MN")
-           .on("click",function(){
-              dv.tbname_set="MN"; //"_MANHATTAN";
-              restrokeMapBorder("SI",1);
-              restrokeMapBorder("MN",2);
-              restrokeMapBorder("BK",1);
-              restrokeMapBorder("QN",1);
-              restrokeMapBorder("BX",1);
-              updateTitle("MANHATTAN");
-              loadReturnButton("visible");
-              reloadBar(dv.tbname_set,dv.tflag_set,bdata);
-              reloadPlot(dv.tbname_set,dv.tflag_set,bdata);
-              reloadGrid(dv.tbname_set,dv.tflag_set,gdata);
-              reloadGplot(dv.tbname_set,dv.tflag_set,gdata);
-           });
-         d3.selectAll(".map.borough.BK")
-           .on("click",function(){
-              dv.tbname_set="BK"; //"_BROOKLYN";
-              restrokeMapBorder("SI",1);
-              restrokeMapBorder("MN",1);
-              restrokeMapBorder("BK",2);
-              restrokeMapBorder("QN",1);
-              restrokeMapBorder("BX",1);
-              updateTitle("BROOKLYN");
-              loadReturnButton("visible");
-              reloadBar(dv.tbname_set,dv.tflag_set,bdata);
-              reloadPlot(dv.tbname_set,dv.tflag_set,bdata);
-              reloadGrid(dv.tbname_set,dv.tflag_set,gdata);
-              reloadGplot(dv.tbname_set,dv.tflag_set,gdata);
-            });
-         d3.selectAll(".map.borough.QN")
-           .on("click",function(){
-              dv.tbname_set="QN"; //"_QUEENS";
-              restrokeMapBorder("SI",1);
-              restrokeMapBorder("MN",1);
-              restrokeMapBorder("BK",1);
-              restrokeMapBorder("QN",2);
-              restrokeMapBorder("BX",1);
-              updateTitle("QUEENS");
-              loadReturnButton("visible");
-              reloadBar(dv.tbname_set,dv.tflag_set,bdata);
-              reloadPlot(dv.tbname_set,dv.tflag_set,bdata);
-              reloadGrid(dv.tbname_set,dv.tflag_set,gdata);
-              reloadGplot(dv.tbname_set,dv.tflag_set,gdata);
-           });
-         d3.selectAll(".map.borough.BX")
-           .on("click",function(){
-              dv.tbname_set="BX"; //"_BRONX";
-              restrokeMapBorder("SI",1);
-              restrokeMapBorder("MN",1);
-              restrokeMapBorder("BK",1);
-              restrokeMapBorder("QN",1);   
-              restrokeMapBorder("BX",2);
-              updateTitle("THE BRONX");
-              loadReturnButton("visible");
-              reloadBar(dv.tbname_set,dv.tflag_set,bdata);
-              reloadPlot(dv.tbname_set,dv.tflag_set,bdata);
-              reloadGrid(dv.tbname_set,dv.tflag_set,gdata);
-              reloadGplot(dv.tbname_set,dv.tflag_set,gdata);
-           });   
-         d3.selectAll(".map.return")
-           .on("click",function(){
-              dv.tbname_set="";
-              restrokeMapBorder("SI",1);
-              restrokeMapBorder("MN",1);
-              restrokeMapBorder("BK",1);
-              restrokeMapBorder("QN",1);
-              restrokeMapBorder("BX",1);
-              updateTitle("NEW YORK CITY");
-              loadReturnButton("hidden");
-              reloadBar(dv.tbname_set,dv.tflag_set,bdata);
-              reloadPlot(dv.tbname_set,dv.tflag_set,bdata);
-              reloadGrid(dv.tbname_set,dv.tflag_set,gdata);
-              reloadGplot(dv.tbname_set,dv.tflag_set,gdata);
-            });
-
-         d3.selectAll(".map.borough.SI")
-           .on("mouseover",function(){
-              restrokeMapBorder("SI",2);
-              updateMapData("SI",1.0,dv.tflag_set,odata);
-           });
-         d3.selectAll(".map.borough.MN")
-           .on("mouseover",function(){
-              restrokeMapBorder("MN",2);
-              updateMapData("MN",1.0,dv.tflag_set,odata);
-           });
-         d3.selectAll(".map.borough.BK")
-           .on("mouseover",function(){
-              restrokeMapBorder("BK",2);
-              updateMapData("BK",1.0,dv.tflag_set,odata);
-            });
-         d3.selectAll(".map.borough.QN")
-           .on("mouseover",function(){
-              restrokeMapBorder("QN",2);
-              updateMapData("QN",1.0,dv.tflag_set,odata);
-           });
-         d3.selectAll(".map.borough.BX")
-           .on("mouseover",function(){
-              restrokeMapBorder("BX",2);
-              updateMapData("BX",1.0,dv.tflag_set,odata);
-           });  
-         d3.selectAll(".map.borough.SI")
-           .on("mouseleave",function(){
-              if (dv.tbname_set != "SI") restrokeMapBorder("SI",1);
-              updateMapData("SI",0.0,dv.tflag_set,odata);
-           });
-         d3.selectAll(".map.borough.MN")
-           .on("mouseleave",function(){
-              if (dv.tbname_set != "MN") restrokeMapBorder("MN",1);
-              updateMapData("MN",0.0,dv.tflag_set,odata);
-           });
-         d3.selectAll(".map.borough.BK")
-           .on("mouseleave",function(){
-              if (dv.tbname_set != "BK") restrokeMapBorder("BK",1);
-              updateMapData("BK",0.0,dv.tflag_set,odata);
-            });
-         d3.selectAll(".map.borough.QN")
-           .on("mouseleave",function(){
-              if (dv.tbname_set != "QN") restrokeMapBorder("QN",1);
-              updateMapData("QN",0.0,dv.tflag_set,odata);
-           });
-         d3.selectAll(".map.borough.BX")
-           .on("mouseleave",function(){
-              if (dv.tbname_set != "BX") restrokeMapBorder("BX",1);
-              updateMapData("BX",0.0,dv.tflag_set,odata);
-           });  
-
-         d3.selectAll(".map.return")
-           .on("mouseover",function(){
-              restrokeReturnBorder(2)
-           });
-         d3.selectAll(".map.return")
-           .on("mouseleave",function(){
-              restrokeReturnBorder(1)
-           });
-
-
-         /////////////////////////////////////////////////////////////////////  
-         // BAR
-         ///////////////////////////////////////////////////////////////////// 
-
-         // Setup
-         var xScale_bar=d3.scale.linear()
-                          .range([0,dv.width_bar-dv.pad_right_bar-dv.pad_left_bar]);
-         var yScale_bar=d3.scale.ordinal()
-                          .rangeRoundBands([dv.pad_top_bar,dv.height_bar-dv.pad_bottom_bar],0.3);
-         var xAxis_bar=d3.svg.axis()
-                         .scale(xScale_bar) 
-                         .orient("bottom");
-         var yAxis_bar=d3.svg.axis()
-                         .scale(yScale_bar)
-                         .orient("left");
-
-         // Calculate Average and Standard Deviation Pre- and Post-Working Group
-         mnsd=calcMean(bdata,dv.tbname_set,dv.tflag_set);
-
-         xScale_bar.domain([0,d3.max(mnsd,function(d){
-                                             return +d.mn+(+d.sd);
-                                          })]);
-         yScale_bar.domain(mnsd.map(function(d) { return d.name; } ));
-
-         dv.svg_bar.selectAll("rect[id='barrects']").data(mnsd).enter().append("rect")
-                   .attr("id","barrects")
-                   .attr("class","bar rects")
-                   .attr("x",dv.pad_left_bar)
-                   .attr("y",function(d)
-                             {
-                               return yScale_bar(d.name);
-                             })
-                   .attr("width",0)
-                   .attr("height",yScale_bar.rangeBand());
-         dv.svg_bar.selectAll("line[id='barlinemain']").data(mnsd).enter().append("line").attr("id","barlinemain")
-                   .attr("class","bar error")
-                   .attr("x1",dv.pad_left_bar)
-                   .attr("x2",dv.pad_left_bar)
-                   .attr("y1",function(d)
-                              {
-                                return yScale_bar(d.name)+yScale_bar.rangeBand()/2;
-                              })
-                   .attr("y2",function(d)
-                              {
-                                return yScale_bar(d.name)+yScale_bar.rangeBand()/2;
-                              });
-         dv.svg_bar.selectAll("line[id='barlineleft']").data(mnsd).enter().append("line").attr("id","barlineleft")
-                   .attr("class","bar error")
-                   .attr("x1",dv.pad_left_bar)
-                   .attr("x2",dv.pad_left_bar)
-                   .attr("y1",function(d)
-                              {
-                                return yScale_bar(d.name)+yScale_bar.rangeBand()/2;
-                              })
-                   .attr("y2",function(d)
-                              {
-                                return yScale_bar(d.name)+yScale_bar.rangeBand()/2;
-                              });
-         dv.svg_bar.selectAll("line[id='barlinerght']").data(mnsd).enter().append("line").attr("id","barlinerght")
-                   .attr("class","bar error")
-                   .attr("x1",dv.pad_left_bar)
-                   .attr("x2",dv.pad_left_bar)
-                   .attr("y1",function(d)
-                              {
-                                return yScale_bar(d.name)+yScale_bar.rangeBand()/2;
-                              })
-                   .attr("y2",function(d)
-                              {
-                                return yScale_bar(d.name)+yScale_bar.rangeBand()/2;
-                              });
-
-         dv.svg_bar.append("g")
-                   .attr("class","bar x axis")
-                   .attr("transform","translate("+dv.pad_left_bar+","+(dv.height_bar-dv.pad_bottom_bar)+")")
-                   .call(xAxis_bar);
-         dv.svg_bar.append("text")
-                   .attr("x",dv.pad_left_bar+(dv.width_bar-dv.pad_left_bar-dv.pad_right_bar)/2)
-                   .attr("y",dv.height_bar-dv.pad_xaxis_bar)
-                   .attr("class","bar label")
-                   .attr("text-anchor","middle")
-                   .text("Number of Pedestrian Injuries and Fatalities Per Month");
-         dv.svg_bar.append("text") // To Fill in Later 
-                   .attr("class","bar y label")
-                   .attr("id","barylabel2")
-                   .attr("x",dv.pad_left_bar+(dv.width_bar-dv.pad_left_bar-dv.pad_right_bar)/2)
-                   .attr("y",dv.height_bar-dv.pad_xaxis_bar+15)
-                   .attr("text-anchor","middle")
-                   .attr("opacity","0.0")
-                   .text("Per Million Population");
-         dv.svg_bar.append("g")
-                   .attr("class","bar y axis")
-                   .attr("transform","translate("+dv.pad_left_bar+",0)")
-                   .call(yAxis_bar);
-         dv.svg_bar.append("text")
-                   .attr("x",dv.pad_left_bar+(dv.width_bar-dv.pad_left_bar-dv.pad_right_bar)/2)
-                   .attr("y",dv.pad_title_bar)
-                   .attr("class","bar label")
-                   .attr("text-anchor","middle")
-                   .text("Effect of Vision Zero Working Group");
-
-         // Load Bars
-         reloadBar(dv.tbname_set,dv.tflag_set,bdata);
-
-         // Annotate Bars
-         dv.svg_bar.append("foreignObject")
-                   .attr("class","bar annotation")
-	                 .attr("width",dv.width_bar-dv.basepad*6)
-                   .attr("height",110)
-	                 .attr("x",dv.basepad*3)
-                   .attr("y",dv.height_bar-dv.pad_xaxis_bar+30)
-	                 .append("xhtml:body")
-	                 .append("xhtml:div");
-         updateBarAnnotation("");
-
-
-
-         /////////////////////////////////////////////////////////////////////  
-         // PLOT
-         ///////////////////////////////////////////////////////////////////// 
-
-         // Setup
-         var xScale_plot=d3.time.scale()
-                           .range([dv.pad_left_plot,dv.width_plot-dv.pad_right_plot]);
-         var yScale_plot=d3.scale.linear()
-                           .range([dv.height_plot-dv.pad_bottom_plot,dv.pad_top_plot]);
-         var xAxis_plot=d3.svg.axis()
-                          .scale(xScale_plot) 
-                          .orient("bottom")
-                          .tickFormat(d3.time.format("%b"));
-         var yAxis_plot=d3.svg.axis()
-                          .scale(yScale_plot)
-                          .orient("left");
-
-         // Points
-         xScale_plot.domain(d3.extent(bdata,function(d){
-                                              return new Date(+d.Year,+d.Month-1);
-                                            }));
-         yScale_plot.domain([0,d3.max(bdata,function(d){
-                                              return +d.Ninjured+(+d.Nkilled);
-                                           })]);
-         dv.svg_plot.selectAll("circle")
-                    .data(bdata)
-                    .enter()
-                    .append("circle")
-                    .attr("class","plot points")
-                    .attr("cx",function(d)
-                               {
-                                  return xScale_plot(new Date(+d.Year,+d.Month-1));
-                               })
-                     .attr("cy",yScale_plot(0))
-                     .attr("r",4);
-
-         var line = d3.svg.line()
-                          .x(function(d) { return xScale_plot(new Date(+d.Year,+d.Month-1)); })
-                          .y(function(d) { return yScale_plot(0); });
-         dv.svg_plot.append("path")
-                    .datum(bdata)
-                    .attr("class", "plot line")
-                    .attr("d", line);
-
-         // Axes and Labels
-         dv.svg_plot.append("g")
-                    .attr("class","plot x axis")
-                    .call(xAxis_plot)
-                    .attr("transform","translate(0,"+(dv.height_plot-dv.pad_bottom_plot)+")");
-         dv.svg_plot.append("text")
-                    .attr("class","plot x label")
-                    .attr("x",dv.pad_left_plot+(dv.width_plot-dv.pad_left_plot-dv.pad_right_plot)/2.0)
-                    .attr("y",dv.height_plot-dv.pad_bottom_plot+dv.pad_xaxis_plot)
-                    .text("Month")
-                    .attr("text-anchor","middle");
-         dv.svg_plot.append("g")
-                    .attr("class","plot y axis")
-                    .attr("transform","translate("+dv.pad_left_plot+",0)")
-                    .call(yAxis_plot);
-         var xtext=dv.pad_left_plot-dv.pad_yaxis_plot,
-             ytext=(dv.height_plot-dv.pad_bottom_plot-dv.pad_top_plot)/2.0+dv.pad_top_plot;
-         dv.svg_plot.append("text")
-                    .attr("class","plot y label")
-                    .attr("x",xtext)
-                    .attr("y",ytext)
-                    .attr("text-anchor","middle")
-                    .attr("transform","rotate(-90,"+xtext+","+ytext+")")
-                    .text("Number of Injuries + Fatalities");
-         dv.svg_plot.append("text") // To Fill in Later 
-                    .attr("class","plot y label")
-                    .attr("id","plotylabel2")
-                    .attr("x",xtext)
-                    .attr("y",ytext+15)
-                    .attr("text-anchor","middle")
-                    .attr("transform","rotate(-90,"+xtext+","+ytext+")")
-                    .attr("opacity","0.0")
-                    .text("Per Million Population");
-
-         // Vision Zero Working Group Line
-         dv.svg_plot.append("line")
-                    .attr("class","plot marker")
-                    .attr("x1",xScale_plot(new Date(2014,1,15)))
-                    .attr("y1",(yScale_plot.range())[0])
-                    .attr("x2",xScale_plot(new Date(2014,1,15)))
-                    .attr("y2",(yScale_plot.range())[1]);
-         dv.svg_plot.append("text")
-                    .attr("class","plot annotation")
-                    .attr("x",xScale_plot(new Date(2014,1,15)))
-                    .attr("y",(yScale_plot.range())[1])
-                    .attr("text-anchor","start")
-                    .text("Vision Zero working");
-         dv.svg_plot.append("text")
-                    .attr("class","plot annotation")
-                    .attr("x",xScale_plot(new Date(2014,1,15))+3)
-                    .attr("y",(yScale_plot.range())[1]+10)
-                    .attr("text-anchor","start")
-                    .text("group established");
-
-         // Caption
-         dv.svg_plot.append("text")
-                    .attr("class","plot description")
-                    .attr("x",dv.basepad*3)
-                    .attr("y",dv.height_plot-dv.basepad*3)
-                    .attr("text-anchor","start")
-                    .text("It seems like there are more accidents in the winter months.  Why?  See below.");
-
-
-         // Load Points and Line
-         reloadPlot(dv.tbname_set,dv.tflag_set,bdata);
-
-
-         /////////////////////////////////////////////////////////////////////  
-         // GRID
-         ///////////////////////////////////////////////////////////////////// 
-
-         // Setup
-         var xScale_grid=d3.time.scale()
-                           .range([dv.pad_left_grid,dv.width_grid-dv.pad_right_grid]);
-         var yScale_grid=d3.time.scale()
-                           .range([dv.pad_top_grid,dv.height_grid-dv.pad_bottom_grid]);
-         var rScale_grid=d3.scale.sqrt();
-         var cScale_grid=d3.scale.linear();
-         var xAxis_grid=d3.svg.axis()
-                          .scale(xScale_grid) 
-                          .orient("bottom")
-                          .tickFormat(d3.time.format("%-I%p"));
-         var yAxis_grid=d3.svg.axis()
-                          .scale(yScale_grid)
-                          .orient("left")
-                          .tickFormat(d3.time.format("%b"));
-
-         // Points
-         xScale_grid.domain([d3.min(gdata,function(d){ 
-                                            return new Date(2014,1,1,+d.Hour);
-                                         }),
-                             d3.max(gdata,function(d){
-                                            return new Date(2014,1,1,+d.Hour);
-                                         })]);
-         yScale_grid.domain([d3.min(gdata,function(d){ 
-                                            return new Date(2014,+d.Month-1);
-                                         }),
-                             d3.max(gdata,function(d){
-                                            return new Date(2014,+d.Month-1);
-                                         })]);
-         rScale_grid.range([0,dv.maxr])
-                    .domain([0,
-                             d3.max(gdata,function(d){
-                                            return +d.Ninjuredkilled;
-                                         })]);
-         cScale_grid.range([135,0])
-                    .domain([d3.min(gdata,function(d){
-                                            return +d.NightDay;
-                                         }),
-                             d3.max(gdata,function(d){
-                                            return +d.NightDay;
-                                         })]);
-
-         dv.svg_grid.selectAll("rect[id='rectshow']")
-                    .data(gdata)
-                    .enter()
-                    .append("rect")
-                    .attr("id","rectshow")
-                    .attr("class",function(d)
-                                  {
-                                     return "grid select hh"+d3.round(+d.Hour).toString()+" show";
-                                  })
-                    .attr("x",function(d)
-                              {
-                                 return xScale_grid(new Date(2014,1,1,+d.Hour))-dv.xr;
-                              })
-                    .attr("y",dv.pad_top_grid-dv.yr)
-                    .attr("width",dv.xr*2)
-                    .attr("height",dv.yr*13*2)
-                    .attr("rx",10)
-                    .attr("ry",10)
-                    .attr("fill","rgb(122,122,122)")
-                    .attr("stroke","none")
-                    .attr("opacity","0.0");
-
-         dv.svg_grid.selectAll("circle")
-                    .data(gdata)
-                    .enter()
-                    .append("circle")
-                    .attr("class","grid points")
-                    .attr("cx",function(d)
-                               {
-                                  return xScale_grid(new Date(2014,1,1,+d.Hour));
-                               })
-                    .attr("cy",function(d)
-                               {
-                                  return yScale_grid(new Date(2014,+d.Month-1));
-                               })
-                    .attr("r",0.1)
-                    .attr("fill",function(d){
-                                   return "rgb(0,0,0)";
-                                 });
-           
-         // Invisible rect to sense mouse hover
-         dv.svg_grid.selectAll("rect[id='rectsense']")
-                    .data(gdata)
-                    .enter()
-                    .append("rect")
-                    .attr("id","rectsense")
-                    .attr("class",function(d)
-                                  {
-                                     return "grid select hh"+d3.round(+d.Hour).toString();
-                                  })
-                    .attr("x",function(d)
-                               {
-                                  return xScale_grid(new Date(2014,1,1,+d.Hour))-dv.xr;
-                               })
-                    .attr("y",dv.pad_top_grid-dv.yr)
-                    .attr("width",dv.xr*2)
-                    .attr("height",dv.yr*13*2)
-                    .attr("rx",10)
-                    .attr("ry",10)
-                    .attr("opacity","0.0")
-                    .on("mouseover",function(){
-                                       d3.selectAll(".grid.select.show").attr("opacity","0.0");
-                                       var classpick=d3.select(this).attr("class").split(" ")[2];
-                                       d3.selectAll(".grid.select."+classpick+".show").attr("opacity","1.0");
-                                       reloadGplot(dv.tbname_set,dv.tflag_set,gdata,classpick);
-                                    })
-                    .on("mouseleave",function(){
-                                        d3.selectAll(".grid.select.show").attr("opacity","0.0");
-                                        reloadGplot(dv.tbname_set,dv.tflag_set,gdata);
-                                    });
-
-         // Labels
-         dv.svg_grid.append("g")
-                    .attr("class","grid x axis")
-                    .attr("transform","translate(0,"+(dv.height_grid-dv.pad_bottom_grid+dv.maxr)+")")
-                    .call(xAxis_grid);
-         dv.svg_grid.append("text")
-                    .attr("class","grid x label")
-                    .attr("x",dv.pad_left_grid+(dv.width_grid-dv.pad_left_grid-dv.pad_right_grid)/2.0)
-                    .attr("y",dv.height_grid-dv.pad_bottom_grid+dv.pad_xaxis_grid)
-                    .text("Hour of Day")
-                    .attr("text-anchor","middle");
-         dv.svg_grid.append("g")
-                    .attr("class","grid y axis")
-                    .attr("transform","translate("+(dv.pad_left_grid-dv.maxr)+",0)")
-                    .call(yAxis_grid);
-         var xtext=dv.pad_left_grid-dv.pad_yaxis_grid,
-             ytext=(dv.height_grid-dv.pad_bottom_grid-dv.pad_top_grid)/2.0+dv.pad_top_grid;
-         dv.svg_grid.append("text")
-                    .attr("class","grid y label")
-                    .attr("x",xtext)
-                    .attr("y",ytext)
-                    .attr("text-anchor","middle")
-                    .attr("transform","rotate(-90,"+xtext+","+ytext+")")
-                    .text("Month of Year");
-
-
-         // Load Points
-         reloadGrid(dv.tbname_set,dv.tflag_set,gdata);
-
-         // Annotate Grid
-         dv.svg_grid.append("foreignObject")
-                    .attr("class","grid annotation")
-	                  .attr("width",dv.width_grid-dv.basepad*7)
-                    .attr("height",110)
-	                  .attr("x",dv.basepad*4)
-                    .attr("y",dv.height_grid-95)
-	                  .append("xhtml:body")
-	                  .append("xhtml:div");
-         updateGridAnnotation("");
-
-         dv.svg_grid.append("text")
-                    .attr("class","grid description")
-                    .attr("x",dv.width_grid-dv.basepad*2)
-                    .attr("y",dv.basepad*4)
-                    .attr("text-anchor","end")
-                    .text("Hover over a column in this plot...");
-
-
-         /////////////////////////////////////////////////////////////////////  
-         // GRIDPLOT
-         ///////////////////////////////////////////////////////////////////// 
-
-         // Setup
-         var xScale_gplot=d3.time.scale()
-                            .range([dv.pad_left_gplot,dv.width_gplot-dv.pad_right_gplot]);
-         var yScale_gplot=d3.scale.linear()
-                            .range([dv.height_gplot-dv.pad_bottom_gplot,dv.pad_top_gplot]);
-         var xAxis_gplot=d3.svg.axis()
-                           .scale(xScale_gplot)
-                           .orient("bottom")
-                           .tickFormat(d3.time.format("%b"));
-         var yAxis_gplot=d3.svg.axis()
-                           .scale(yScale_gplot)
-                           .orient("left");
-         var cScale_gplot=d3.scale.linear();
-
-         // Points
-         xScale_gplot.domain([d3.min(gdata,function(d){ 
-                                              return new Date(2014,+d.Month-1);
-                                           }),
-                              d3.max(gdata,function(d){
-                                              return new Date(2014,+d.Month-1);
-                                           })]);
-         yScale_gplot.range([dv.height_gplot-dv.pad_bottom_gplot,dv.pad_top_gplot])
-                     .domain([0,d3.max(gdata,function(d){
-                                                return +d.Ninjuredkilled;
-                                             })]);
-         cScale_gplot.range([135,0])
-                     .domain([d3.min(gdata,function(d){
-                                              return +d.NightDay;
-                                           }),
-                              d3.max(gdata,function(d){
-                                              return +d.NightDay;
-                                           })]);
-
-         var line=d3.svg.line()
-                    .x(function(d) { return xScale_gplot(new Date(2014,+d.Month-1)); })
-                    .y(function(d) { return yScale_gplot(+d.Ninjuredkilled); });
-
-
-         var Nhour=24;
-         for (var hh=0;hh<Nhour;hh++)
-         {
-            // Create New Data Set
-            var jj=0,mdata=[];
-
-            for (var ii=0;ii<gdata.length;ii++)
-            {
-               if (+gdata[ii].Hour==hh) 
-               {
-                  mdata[jj]={Month:+gdata[ii].Month,Ninjuredkilled:0};
-                  jj++;
-               }
-            }
-            mdata.sort(compareMo);
-            // Plot line
-            dv.svg_gplot.append("path")
-                        .datum(mdata)
-                        .attr("class","gplot line hh"+hh.toString())
-                        .attr("stroke","black")
-                        .attr("d",line);
-         }
-          
+         var dv={}; // Store all global variables here
          
-         // Axes and Labels
-         dv.svg_gplot.append("g")
-                     .attr("class","gplot x axis")
-                     .call(xAxis_gplot)
-                     .attr("transform","translate(0,"+(dv.height_gplot-dv.pad_bottom_gplot)+")");
-         dv.svg_gplot.append("text")
-                     .attr("class","gplot x label")
-                     .attr("x",dv.pad_left_gplot+(dv.width_gplot-dv.pad_left_gplot-dv.pad_right_gplot)/2.0)
-                     .attr("y",dv.height_gplot-dv.pad_bottom_gplot+dv.pad_xaxis_gplot)
-                     .text("Month of Year")
-                     .attr("text-anchor","middle");
-         dv.svg_gplot.append("g")
-                     .attr("class","gplot y axis")
-                     .attr("transform","translate("+dv.pad_left_gplot+",0)")
-                     .call(yAxis_gplot);
-         var xtext=dv.pad_left_gplot-dv.pad_yaxis_gplot,
-             ytext=(dv.height_gplot-dv.pad_bottom_gplot-dv.pad_top_gplot)/2.0+dv.pad_top_gplot;
-         dv.svg_gplot.append("text") 
-                     .attr("class","gplot y label")
-                     .attr("x",xtext)
-                     .attr("y",ytext)
-                     .attr("text-anchor","middle")
-                     .attr("transform","rotate(-90,"+xtext+","+ytext+")")
-                     .text("Number of Injuries + Fatalities");
-         dv.svg_gplot.append("text") // To Fill in Later 
-                     .attr("class","gplot y label")
-                     .attr("id","gplotylabel2")
-                     .attr("x",xtext)
-                     .attr("y",ytext+15)
-                     .attr("text-anchor","middle")
-                     .attr("transform","rotate(-90,"+xtext+","+ytext+")")
-                     .attr("opacity","0.0")
-                     .text("Per Million Population");
 
-         // Load Gridplot
-         reloadGplot(dv.tbname_set,dv.tflag_set,gdata);
+         /////////////////////////////////////////////////////////////////////  
+         // CREATE PAGE
+         ///////////////////////////////////////////////////////////////////// 
 
-         // Annotate Gridplot
-         dv.svg_gplot.append("text")
-                     .attr("class","gplot description")
-                     .attr("x",dv.basepad*2)
-                     .attr("y",dv.basepad*4)
-                     .attr("text-anchor","start")
-                     .text("...to highlight the corresponding line in this plot.");
+         // Add Tree Drawing
+         dv.TreeDrawing = new TreeDrawing();
+
+         // Generate Page Template
+         dv.PageMaster = new PageMaster();
+
+         // Generate About Page
+         dv.AboutPage = new AboutPage(dv.PageMaster,dv.TreeDrawing);
+
+         // Generate Projects Page
+         dv.Projects = new Projects(dv.PageMaster,dv.AboutPage);
+
+         // Generate Papers Page
+         dv.Papers = new Papers(dv.PageMaster,dv.AboutPage);
+
+         // Control Menu Click Behavior
+         
+         // HOME
+         d3.selectAll(".menu.button.home").on("click",function(){
+
+            var d1=$.Deferred();
+            var d2=$.Deferred();
+            var d3=$.Deferred();
+            first();
+            $.when(d1,d2,d3).done(second);
+
+            function first() 
+            {
+               dv.AboutPage.detach(d1);
+               dv.Projects.detach(d2);
+               dv.Papers.detach(d3);
+            }
+            function second()
+            {
+               dv.TreeDrawing.reattach();
+               update_copyright();
+               updateWindow(); // Because scroll bar from About page might mess things up
+            }
+
+         }); 
+
+         // ABOUT
+         d3.selectAll(".menu.button.about").on("click",function(){
+
+            var d1=$.Deferred();
+            var d2=$.Deferred();
+            var d3=$.Deferred();
+            first();
+            $.when(d1,d2,d3).done(second);
+
+            function first()
+            {
+               dv.TreeDrawing.detach(d1); 
+               dv.Projects.detach(d2);
+               dv.Papers.detach(d3);
+            }
+
+            function second()
+            {
+               if (!dv.AboutPage.created) dv.AboutPage.createPage();
+               else dv.AboutPage.reattach();
+               update_copyright();
+               updateWindow(); // Because scroll bar from About page might mess things up
+
+            }
+
+         }); 
+
+         // PROJECTS
+         d3.selectAll(".menu.button.projects").on("click",function(){
+
+            var d1=$.Deferred();
+            var d2=$.Deferred();
+            var d3=$.Deferred();
+            first();
+            $.when(d1,d2,d3).done(second);
+
+            function first() 
+            {
+               dv.TreeDrawing.detach(d1); 
+               dv.AboutPage.detach(d2);
+               dv.Papers.detach(d3);
+            }
+            function second()
+            {
+               if (!dv.Projects.created) dv.Projects.createPage();
+               else dv.Projects.reattach();
+               update_copyright();
+               updateWindow(); // Because scroll bar from About page might mess things up
+            }
+
+         }); 
+
+         // PAPERS
+         d3.selectAll(".menu.button.papers").on("click",function(){
+
+            var d1=$.Deferred();
+            var d2=$.Deferred();
+            var d3=$.Deferred();
+            first();
+            $.when(d1,d2,d3).done(second);
+
+            function first() 
+            {
+               dv.TreeDrawing.detach(d1); 
+               dv.AboutPage.detach(d2);
+               dv.Projects.detach(d3);
+            }
+            function second()
+            {
+               if (!dv.Papers.created) dv.Papers.createPage();
+               else dv.Papers.reattach();
+               update_copyright();
+               updateWindow(); // Because scroll bar from About page might mess things up
+            }
+
+         }); 
+
 
 
          /////////////////////////////////////////////////////////////////////  
-         // CLOSE DATA FILES
-         /////////////////////////////////////////////////////////////////////
-         }); //gdata d3.csv("Clean_NYPD_Collisions_ByMonthOnlyHour_withSunlight_ALLBOROUGHS.csv"
-         }); //bdata d3.csv("Clean_NYPD_Collisions_ALLBOROUGHS.csv"
-         }); //odata d3.csv("Clean_NYPD_Collisions_OverallAvg_ByBorough.csv"
-         }); //nyc d3.json("nycbb_topojson.json"
+         // ADD COPYRIGHT SYMBOL
+         ///////////////////////////////////////////////////////////////////// 
+         var cr=document.createElement("p"),
+             el=document.getElementById("svg_menu");
+         document.body.insertBefore(cr,el);
+         cr.setAttribute("id","copyright");
+         cr.innerHTML="Copyright \xA9 2015 Melanie Freed";
+         update_copyright();
 
+         function update_copyright() {
+            var d1=$.Deferred();
+            first();
+            $.when(d1).done(second);
 
-         /////////////////////////////////////////////////////////////////////  
-         // FUNCTIONS
-         /////////////////////////////////////////////////////////////////////
-
-         //
-         // For sorting object by month
-         //
-         function compareMo(a,b) {
-           if (+a.Month < +b.Month) {return -1;}
-           if (+a.Month > +b.Month) {return 1;}
-           return 0;
-         }  
-         //
-         // Calculating mean and standard deviation pre- and post-working group
-         //
-         function calcMean(data,bname,tflag) {
-            date_wkgrp=new Date(2014,1,15);
-            var mn_before=0,mn_after=0,sd_before=0,sd_after=0,
-                N_before=0,N_after=0;
-            for (var ii=0;ii<data.length;ii++)
+            // detach copyright (so that it's position is not included in context size)
+            function first() 
             {
-               if((new Date(+data[ii].Year,+data[ii].Month)) <= date_wkgrp)
-               {
-                  switch(tflag) {
-                     case 0: mn_before=mn_before+(+data[ii]["Ninjured"+bname])+(+data[ii]["Nkilled"+bname]); break;
-                     case 1: mn_before=mn_before+(+data[ii]["NinjuredPer1000000"+bname])+(+data[ii]["NkilledPer1000000"+bname]); break;
-                  }
-                  N_before=N_before+1.0;
-               }
-               else
-               {
-                  switch(tflag) {
-                     case 0: mn_after=mn_after+(+data[ii]["Ninjured"+bname])+(+data[ii]["Nkilled"+bname]); break;
-                     case 1: mn_after=mn_after+(+data[ii]["NinjuredPer1000000"+bname])+(+data[ii]["NkilledPer1000000"+bname]); break;
-                  }
-                  N_after=N_after+1.0;
-               }
+               cr.parentNode.removeChild(cr);
+               d1.resolve();
             }
-            mn_before=mn_before/N_before;
-            mn_after=mn_after/N_after;
-
-            for (var ii=0;ii<data.length;ii++)
+            function second()
             {
-               if((new Date(+data[ii].Year,+data[ii].Month)) <= date_wkgrp)
-               {
-                  switch(tflag) {
-                     case 0: sd_before=sd_before+Math.pow(((+data[ii]["Ninjured"+bname])+(+data[ii]["Nkilled"+bname])-mn_before),2); break;
-                     case 1: sd_before=sd_before+Math.pow(((+data[ii]["NinjuredPer1000000"+bname])+(+data[ii]["NkilledPer1000000"+bname])-mn_before),2); break;
-                  }                  
-               }
-               else
-               {
-                  switch(tflag) {
-                     case 0: sd_after=sd_after+Math.pow(((+data[ii]["Ninjured"+bname])+(+data[ii]["Nkilled"+bname])-mn_after),2); break;
-                     case 1: sd_after=sd_after+Math.pow(((+data[ii]["NinjuredPer1000000"+bname])+(+data[ii]["NkilledPer1000000"+bname])-mn_after),2); break;
-                  }
-               }
-            }
-            sd_before=Math.sqrt(sd_before/(N_before-1.0));
-            sd_after=Math.sqrt(sd_after/(N_after-1.0));
+               // Get size of content
+               var ht=Math.max(document.body.scrollHeight, document.body.offsetHeight, 
+                               document.documentElement.clientHeight, document.documentElement.scrollHeight, 
+                               document.documentElement.offsetHeight );
 
-            return [{name:"Before",mn:mn_before,sd:sd_before},
-                    {name:"After",mn:mn_after,sd:sd_after}];
-         }; 
-         //
-         // Update stroke width of picker borders
-         //
-         function restrokePickerBorder(ptype,th) {
-            d3.selectAll(".picker."+ptype).style("stroke-width",th+"px");
-         };
-         //
-         // Update stroke width of map borders
-         //
-         function restrokeMapBorder(br,th) {
-            d3.selectAll(".map.borough."+br).style("stroke-width",th+"px");
-         };
-         //
-         // Update map info
-         //
-         function updateMapData(br,op,tflag,data) {
-            var val=0,ind=0;
-            switch (br){
-               case "SI": ind=0; break;
-               case "MN": ind=1; break;
-               case "BK": ind=2; break;
-               case "QN": ind=3; break;
-               case "BX": ind=4; break;
+               // Update copyright position
+               var fsize=Math.round(dv.PageMaster.actualFontSize/2),
+                   msize=fsize/2;
+               var value="margin: "+msize+"px "+msize+"px "+msize+"px "+msize+"px; "+
+                          "position: absolute; top: "+(ht-fsize-msize*2)+"px; left: 0; text-align: start; line-height: 1.0; font-size: "+fsize+"px;";
+               cr.setAttribute("style",value);
+
+               // Reattach copyright
+               var ref=document.getElementById("svg_menu");
+               document.body.insertBefore(cr,ref);
             }
-            switch(tflag) {
-               case 0: val=d3.round(data[ind].AvgInjuredKilledByMonth); break;
-               case 1: val=d3.round(data[ind].AvgInjuredKilledByMonthPer1000000Pop); break;
-            }
-            d3.selectAll(".map.borough."+br+".info").attr("opacity",op).text(val); 
-         };
-         //
-         // Load Return to NYC button
-         //
-         function loadReturnButton(type) {
-            d3.selectAll(".map.return.text").attr("visibility",type);
-            d3.selectAll(".map.return.rect").attr("visibility",type);
-         };
-         //
-         // Update stroke width of return button borders
-         //
-         function restrokeReturnBorder(th) {
-            d3.selectAll(".map.return.rect").style("stroke-width",th+"px");
-         };
-         //
-         // Update title of webpage
-         //
-         function updateTitle(bname) {
-            d3.select("h1").html("PEDESTRIANS VERSUS CARS IN<br>"+bname);
-         };
-         //
-         // Update map annotation text
-         //
-         function updateMapAnnotation(itext) {
-              dv.svg_map.selectAll(".map.annotation")
-                        .html("The colors in this map indicate the average number of pedestrian injuries and fatalities "+itext+"per month in each borough.  Darker indicates a larger number.  Click on a borough to update the plots with data for that borough only.");
-         };
-         // 
-         // Update bar annotation text
-         //
-         function updateBarAnnotation(itext) {
-              dv.svg_bar.selectAll(".bar.annotation")
-                        .html("The average number of pedestrian injuries and fatalities "+itext+"per month before and after the Vision Zero working group was established.  The error bars are standard deviations.  There does appear to be a decrease in injuries and fatalities after the working group was established, but a statistical analysis should be done.");
-         };
-         //
-         // Update grid annotation text
-         //
-         function updateGridAnnotation(itext) {
-              dv.svg_grid.selectAll(".grid.annotation")
-                         .html("The area of the circles indicates the average number of injuries and fatalities "+itext+"per month for that month and time.  A lighter color indicates more daylight.  At 6pm, the larger circles are darker in color.  This means that in months where it was darker at 6pm, there were more accidents compared to months where there was still daylight at 6pm.  Therefore, the increase in accidents in the winter seems to be due, at least in part, to a decrease in daylight during those months.");
          }
-         //
-         // Update map colors
-         //
-         function reloadMap(tflag,nyc,odata) {
-
-            var colorScale_map=d3.scale.linear();
-
-            colorScale_map.range([0,125])
-                          .domain([d3.min(odata,function(d){
-                                                  switch(tflag) {
-                                                    case 0: return +d.AvgInjuredKilledByMonth; break;
-                                                    case 1: return +d.AvgInjuredKilledByMonthPer1000000Pop; break;
-                                                  }}),
-                                   d3.max(odata,function(d){
-                                                  switch(tflag) {
-                                                    case 0: return +d.AvgInjuredKilledByMonth; break;
-                                                    case 1: return +d.AvgInjuredKilledByMonthPer1000000Pop; break;
-                                                  }})]);
-            for (var ii=0;ii<5;ii++)
-            {
-               var br="";
-               switch (d3.round(odata[ii].Borough)){
-                  case 0: br="SI"; bdata=topojson.feature(nyc,nyc.objects.nyc_geojson.geometries[0]); break;
-                  case 1: br="MN"; bdata=topojson.feature(nyc,nyc.objects.nyc_geojson.geometries[1]); break;
-                  case 2: br="BK"; bdata=topojson.feature(nyc,nyc.objects.nyc_geojson.geometries[3]); break;
-                  case 3: br="QN"; bdata=topojson.feature(nyc,nyc.objects.nyc_geojson.geometries[4]); break;
-                  case 4: br="BX"; bdata=topojson.feature(nyc,nyc.objects.nyc_geojson.geometries[2]); break;
-               }
-               var dval=0;
-               switch(tflag) {
-                  case 0: dval=(+odata[ii].AvgInjuredKilledByMonth); break;
-                  case 1: dval=(+odata[ii].AvgInjuredKilledByMonthPer1000000Pop); break;
-               }
-               dv.svg_map.selectAll("path.map.borough."+br)
-                         .transition()
-                         .duration(dv.time_load)
-                         .style("fill","rgb("+d3.round(125-colorScale_map(dval))+","+
-                                              d3.round(255-colorScale_map(dval))+","+
-                                              d3.round(190-colorScale_map(dval))+")");
-            }
-         };
-         //
-         // Update bar chart
-         //
-         function reloadBar(bname,tflag,data) {
-
-            var xScale_bar=d3.scale.linear()
-                             .range([0,dv.width_bar-dv.pad_right_bar-dv.pad_left_bar]);
-            var xAxis_bar=d3.svg.axis()
-                            .scale(xScale_bar) 
-                            .orient("bottom");
-            var yScale_bar=d3.scale.ordinal()
-                             .rangeRoundBands([dv.pad_top_bar,dv.height_bar-dv.pad_bottom_bar],0.3);
-            var yAxis_bar=d3.svg.axis()
-                            .scale(yScale_bar)
-                            .orient("left");
-
-            mnsd=calcMean(data,bname,tflag);
-            xScale_bar.domain([0,d3.max(mnsd,function(d){
-                                                return +d.mn+(+d.sd);
-                                             })]);
-            yScale_bar.domain(mnsd.map(function(d) { return d.name; } ));
-
-            dv.svg_bar.selectAll(".bar.rects")
-                      .data(mnsd)
-                      .transition()
-                      .duration(dv.time_load)
-                      .attr("width",function(d){
-                                       return xScale_bar(+d.mn);
-                                    });
-            dv.svg_bar.selectAll("line[id='barlinemain']")
-                      .data(mnsd)
-                      .transition()
-                      .duration(dv.time_load)
-                      .attr("x1",function(d)
-                                 {
-                                   return dv.pad_left_bar+xScale_bar(+d.mn-(+d.sd));
-                                 })
-                      .attr("x2",function(d)
-                                 {
-                                   return dv.pad_left_bar+xScale_bar(+d.mn+(+d.sd));
-                                });
-            dv.svg_bar.selectAll("line[id='barlineleft']")
-                      .data(mnsd)
-                      .transition()
-                      .duration(dv.time_load)
-                      .attr("x1",function(d)
-                                 {
-                                   return dv.pad_left_bar+xScale_bar(+d.mn-(+d.sd));
-                                 })
-                      .attr("x2",function(d)
-                                 {
-                                   return dv.pad_left_bar+xScale_bar(+d.mn-(+d.sd));
-                                 })
-                      .attr("y1",function(d)
-                                 {
-                                   return yScale_bar(d.name)+yScale_bar.rangeBand()/2-yScale_bar.rangeBand()/4;
-                                 })
-                      .attr("y2",function(d)
-                                 {
-                                   return yScale_bar(d.name)+yScale_bar.rangeBand()/2+yScale_bar.rangeBand()/4;
-                                 });
-
-            dv.svg_bar.selectAll("line[id='barlinerght']")
-                      .data(mnsd)
-                      .transition()
-                      .duration(dv.time_load)
-                      .attr("x1",function(d)
-                                 {
-                                   return dv.pad_left_bar+xScale_bar(+d.mn+(+d.sd));
-                                 })
-                      .attr("x2",function(d)
-                                 {
-                                   return dv.pad_left_bar+xScale_bar(+d.mn+(+d.sd));
-                                 })
-                      .attr("y1",function(d)
-                                 {
-                                   return yScale_bar(d.name)+yScale_bar.rangeBand()/2-yScale_bar.rangeBand()/4;
-                                 })
-                      .attr("y2",function(d)
-                                 {
-                                   return yScale_bar(d.name)+yScale_bar.rangeBand()/2+yScale_bar.rangeBand()/4;
-                                 });
-
-            d3.selectAll(".bar.x.axis")
-              .transition()
-              .duration(dv.time_load)
-              .call(xAxis_bar);
-            var lopac="";
-            switch(tflag) {
-               case 0: lopac="0.0"; break;
-               case 1: lopac="1.0"; break;
-            }
-            d3.selectAll("#barylabel2")
-              .transition()
-              .duration(dv.time_load)
-              .attr("opacity",lopac);
-
-         };
-         //
-         // Update plot
-         //
-         function reloadPlot(bname,tflag,data) {
-            var xScale_plot=d3.time.scale()
-                              .range([dv.pad_left_plot,dv.width_plot-dv.pad_right_plot]);
-            var yScale_plot=d3.scale.linear()
-                              .range([dv.height_plot-dv.pad_bottom_plot,dv.pad_top_plot]);
-            var yAxis_plot=d3.svg.axis()
-                             .scale(yScale_plot)
-                             .orient("left");
-
-            xScale_plot.domain(d3.extent(data,function(d){
-                                                  return new Date(+d.Year,+d.Month-1);
-                                                }));
-            yScale_plot.domain([0,d3.max(data,function(d){
-                                                  switch(tflag) {
-                                                     case 0: return +d["Ninjured"+bname]+(+d["Nkilled"+bname]); break;
-                                                     case 1: return +d["NinjuredPer1000000"+bname]+(+d["NkilledPer1000000"+bname]); break;
-                                                  }
-                                               })]);
-
-            // "Load" Points
-            d3.selectAll(".plot.points")
-              .data(data)
-              .transition()
-              .duration(dv.time_load)
-              .attr("cy",function(d)
-                         {
-                            switch(tflag) {
-                               case 0: return yScale_plot(+d["Ninjured"+bname]+(+d["Nkilled"+bname])); break;
-                               case 1: return yScale_plot(+d["NinjuredPer1000000"+bname]+(+d["NkilledPer1000000"+bname])); break;
-                            }
-                         });
-            // "Load" Lines
-            var line = d3.svg.line()
-                             .x(function(d) { return xScale_plot(new Date(+d.Year,+d.Month-1)); })
-                             .y(function(d) {
-                                   switch(tflag) {
-                                      case 0: return yScale_plot(+d["Ninjured"+bname]+(+d["Nkilled"+bname])); break;
-                                      case 1: return yScale_plot(+d["NinjuredPer1000000"+bname]+(+d["NkilledPer1000000"+bname])); break;
-                                   }
-                                });
-            dv.svg_plot.selectAll(".plot.line")
-                       .datum(data)
-                       .transition()
-                       .duration(dv.time_load)
-                       .attr("d", line);
-
-            // Labels
-            d3.selectAll(".plot.y.axis")
-              .transition()
-              .duration(dv.time_load)
-              .call(yAxis_plot);
-            var xtext=dv.pad_left_plot-dv.pad_yaxis_plot,
-                ytext=(dv.height_plot-dv.pad_bottom_plot-dv.pad_top_plot)/2.0+dv.pad_top_plot;   
-            var lopac="";
-            switch(tflag) {
-               case 0: lopac="0.0"; break;
-               case 1: lopac="1.0"; break;
-            }
-            d3.selectAll("#plotylabel2")
-              .transition()
-              .duration(dv.time_load)
-              .attr("opacity",lopac);        
-
-         };
-         //
-         // Update grid
-         //
-         function reloadGrid(bname,tflag,data) {
-
-            var rScale_grid=d3.scale.sqrt();
-            var cScale_grid=d3.scale.linear();
-
-            rScale_grid.range([0,dv.maxr])
-                       .domain([0,
-                                d3.max(data,function(d){
-                                                switch(tflag) {
-                                                   case 0: return +d["Ninjuredkilled"+bname]; break;
-                                                   case 1: return +d["NinjuredkilledPer1000000"+bname]; break;
-                                                }
-                                              })]);
-            cScale_grid.range([135,0])
-                       .domain([d3.min(data,function(d){
-                                                return +d.NightDay;
-                                             }),
-                                d3.max(data,function(d){
-                                                return +d.NightDay;
-                                             })]);
- 
-            // "Load" Points
-            dv.svg_grid.selectAll(".grid.points")
-                       .data(data)
-                       .transition()
-                       .duration(dv.time_load)
-                       .attr("r",function(d)
-                                 {
-                                    switch(tflag) {
-                                       case 0: return rScale_grid(+d["Ninjuredkilled"+bname]); break;
-                                       case 1: return rScale_grid(+d["NinjuredkilledPer1000000"+bname]); break;
-                                    }
-                                 })
-                       .attr("fill",function(d){
-                                       return "rgb("+(135-d3.round(cScale_grid(+d.NightDay)))+","+
-                                                     (206-d3.round(cScale_grid(+d.NightDay)))+","+
-                                                     (250-d3.round(cScale_grid(+d.NightDay)))+")";
-                                    });
-         };
-         //
-         // Update grid plot
-         //
-         function reloadGplot(bname,tflag,data,classpick) {
-            var Nargs=arguments.length;
-            var xScale_gplot=d3.time.scale()
-                               .range([dv.pad_left_gplot,dv.width_gplot-dv.pad_right_gplot]);
-            var yScale_gplot=d3.scale.linear()
-                               .range([dv.height_gplot-dv.pad_bottom_gplot,dv.pad_top_gplot]);
-            var yAxis_gplot=d3.svg.axis()
-                              .scale(yScale_gplot)
-                              .orient("left");
-
-            xScale_gplot.domain([d3.min(data,function(d){ 
-                                                return new Date(2014,+d.Month-1);
-                                             }),
-                                 d3.max(data,function(d){
-                                                return new Date(2014,+d.Month-1);
-                                             })]);
-            yScale_gplot.domain([0,d3.max(data,function(d){
-                                                   switch(tflag) {
-                                                       case 0: if (bname.length==0) return +d["Ninjuredkilled"];
-                                                               else return Math.max(+d["NinjuredkilledSI"],
-                                                                                    +d["NinjuredkilledMN"],
-                                                                                    +d["NinjuredkilledBK"],
-                                                                                    +d["NinjuredkilledQN"],
-                                                                                    +d["NinjuredkilledBX"]); break;
-                                                       case 1: if (bname.length==0) return +d["NinjuredkilledPer1000000"];
-                                                               else return Math.max(+d["NinjuredkilledPer1000000SI"],
-                                                                                    +d["NinjuredkilledPer1000000MN"],
-                                                                                    +d["NinjuredkilledPer1000000BK"],
-                                                                                    +d["NinjuredkilledPer1000000QN"],
-                                                                                    +d["NinjuredkilledPer1000000BX"]); break;
-                                                    }
-                                                })]);
-
-            d3.selectAll(".gplot.y.axis")
-              .transition()
-              .duration(dv.time_load)
-              .call(yAxis_gplot);
-            var lopac="";
-            switch(tflag) {
-               case 0: lopac="0.0"; break;
-               case 1: lopac="1.0"; break;
-            }
-            d3.selectAll("#gplotylabel2")
-              .transition()
-              .duration(dv.time_load)
-              .attr("opacity",lopac);
-
-            // "Load" Points and Line
-            var line=d3.svg.line()
-                       .x(function(d) { return xScale_gplot(new Date(2014,+d.Month-1)); })
-                       .y(function(d) { return yScale_gplot(+d["Ninjuredkilled"]); });
-
-            var Nhour=24;
-            for (var hh=0;hh<Nhour;hh++)
-            {
-               // Create New Data Set
-               var jj=0,mdata=[];
-               for (var ii=0;ii<data.length;ii++)
-               {
-                  if (+data[ii].Hour==hh) 
-                  {
-                     switch(tflag) {
-                        case 0: mdata[jj]={Month:+data[ii].Month,Ninjuredkilled:+data[ii]["Ninjuredkilled"+bname]}; break;
-                        case 1: mdata[jj]={Month:+data[ii].Month,Ninjuredkilled:+data[ii]["NinjuredkilledPer1000000"+bname]}; break;
-                     }    
-                     jj++;
-                  }
-               }
-               mdata.sort(compareMo);
-               // Plot line
-               dv.svg_gplot.selectAll(".gplot.line.hh"+hh.toString())
-                           .classed("highlight",function(d){
-                                                  if (Nargs == 4) {return d3.selectAll(".grid.select."+classpick+".show").classed("hh"+hh.toString());}
-                                                  else {return false;}
-                                                })
-                           .datum(mdata)
-                           .transition()
-                           .duration(dv.time_load)
-                           .attr("d",line);
-               // Jump highlighted line to front
-               d3.selectAll(".gplot.line.highlight")
-                 .each(function() {
-                         this.parentNode.appendChild(this);
-                       });
-            }
-
-         };
+         
 
 
+         /////////////////////////////////////////////////////////////////////  
+         // MAKE ADJUSTMENTS ON WINDOW RESIZE
+         ///////////////////////////////////////////////////////////////////// 
+         window.addEventListener("resize",updateWindow,true); 
+
+         function updateWindow() {
+
+            // Update Menu
+            dv.PageMaster.adjustMenu();
+
+            // Update Tree
+            if (dv.TreeDrawing.created) dv.TreeDrawing.redrawCanvas();
+
+            // Update About 
+            if (dv.AboutPage.created) dv.AboutPage.adjustPage(dv.PageMaster,dv.TreeDrawing);
+
+            // Update Projects
+            if (dv.Projects.created) dv.Projects.adjustPage(dv.PageMaster,dv.AboutPage);
+
+            // Update Papers
+            if (dv.Papers.created) dv.Papers.adjustPage(dv.PageMaster,dv.AboutPage);
+
+            // Update copyright
+            update_copyright()
+
+         } // updateWindow
 
       </script>
 
