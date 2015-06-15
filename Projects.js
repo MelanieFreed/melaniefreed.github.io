@@ -142,10 +142,10 @@ Projects.prototype = {
       // Append container for project text
       this.svg.append("foreignObject")
               .attr("class","projects annotation")
-              .attr("width",this.width-this.fontSize*2)
-              .attr("height",this.headerHeight)
-              .attr("x",this.fontSize)
-              .attr("y",this.fontSize)
+              .attr("width",this.width-this.fontSize*2+"px")
+              .attr("height",this.headerHeight+"px")
+              .attr("x",this.fontSize+"px")
+              .attr("y",this.fontSize+"px")
               .append("xhtml:body")
               .append("xhtml:div");
 
