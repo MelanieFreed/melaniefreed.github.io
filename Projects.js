@@ -2,12 +2,8 @@
 /////////////////////////////////////////////////////////////////////  
 // PROJECTS OBJECT
 ///////////////////////////////////////////////////////////////////// 
-var Projects = function(PageMasterHandle,AboutPageHandle,browser)
+var Projects = function(PageMasterHandle,AboutPageHandle)
 {
-
-   // Save browser info
-   this.browser=browser;
-
    // Define Project Data
    this.defineProjects();
 
@@ -146,10 +142,10 @@ Projects.prototype = {
       // Append container for project text
       this.svg.append("foreignObject")
               .attr("class","projects annotation")
-              .attr("width",this.width-this.fontSize*2+"px")
-              .attr("height",this.headerHeight+"px")
-              .attr("x",this.fontSize+"px")
-              .attr("y",this.fontSize+"px")
+              .attr("width",this.width-this.fontSize*2)
+              .attr("height",this.headerHeight)
+              .attr("x",this.fontSize)
+              .attr("y",this.fontSize)
               .append("xhtml:body")
               .append("xhtml:div");
 
@@ -226,7 +222,7 @@ Projects.prototype = {
            thishandle.svg.selectAll(".projects.annotation")
                      .html(d.info);
            // Jump circle to front
-           if (this.browser != "IE") this.parentNode.appendChild(this);
+           this.parentNode.appendChild(this);
            // Make all other circles fade
            thishandle.svg.selectAll(".projects.node.circle")
                      .style("opacity",function(c){

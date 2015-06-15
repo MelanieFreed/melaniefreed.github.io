@@ -2,12 +2,8 @@
 /////////////////////////////////////////////////////////////////////  
 // PAPERS OBJECT
 ///////////////////////////////////////////////////////////////////// 
-var Papers = function(PageMasterHandle,AboutPageHandle,browser)
+var Papers = function(PageMasterHandle,AboutPageHandle)
 {
-
-   // Save browser info
-   this.browser=browser;
-
    // Define Paper Data
    this.definePapers();
 
@@ -419,10 +415,10 @@ Papers.prototype = {
       // Append container for paper text
       this.svg.append("foreignObject")
               .attr("class","papers annotation")
-              .attr("width",this.width-this.fontSize*2+"px")
-              .attr("height",this.headerHeight+"px")
-              .attr("x",this.fontSize+"px")
-              .attr("y",this.fontSize+"px")
+              .attr("width",this.width-this.fontSize*2)
+              .attr("height",this.headerHeight)
+              .attr("x",this.fontSize)
+              .attr("y",this.fontSize)
               .append("xhtml:body")
               .append("xhtml:div");
 
@@ -500,7 +496,7 @@ Papers.prototype = {
            thishandle.svg.selectAll(".papers.annotation")
                      .html(d.info);
            // Jump circle to front
-           if (this.browser != "IE") this.parentNode.appendChild(this);
+           this.parentNode.appendChild(this);
            // Make all other circles fade
            thishandle.svg.selectAll(".papers.node.circle")
                      .style("opacity",function(c){
