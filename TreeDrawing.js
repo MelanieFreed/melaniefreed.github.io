@@ -17,17 +17,18 @@ var TreeDrawing = function(pagetop,browser)
    this.dtor=Math.PI/180.0; // To convert degrees to radians
    this.rtod=180.0/Math.PI; // To convert radians to degrees
 
-
    // Tree Properties
    this.treeProperties={
       maxNorders: 7, // Max number of orders to display
                     // = number of orders to calculate
                     // You may adjust down for display
                     // to keep things fast
-      minBaseWidth: 0.5, // Smallest Tree to Draw in Pixels
+      minBaseWidth: 1.0, // Smallest Tree to Draw in Pixels
       basecolor: {r:0 ,g:100 ,b:0 } // Base color of trees
    }; 
 
+   // Test browser speed
+   this.testSpeed();
 
    // Properties for parameter calculations
    this.Param={
@@ -77,6 +78,33 @@ var TreeDrawing = function(pagetop,browser)
 
 TreeDrawing.prototype = {
  
+   //-------------------------------------------------------------------
+   // Test how fast browser is at drawing rects on a canvas
+   //-------------------------------------------------------------------
+   testSpeed: function(){
+
+      this.speedcanvas=document.body.appendChild(document.createElement("canvas"));
+      this.speedcanvas.id="canvas_speed";
+      this.speedcanvas.style.display="none";
+      this.speedcanvas.style.position="absolute";
+      this.speedcanvas.style.top="0px";
+      this.speedcanvas.style.left="0px";
+      this.speedcanvas.width=25;
+      this.speedcanvas.height=25;
+      this.speedcontext=this.speedcanvas.getContext("2d");
+
+      var tmax=100, tstart=performance.now(), telapsed=0, Nfill=0;
+      while ((performance.now()-tstart) < tmax)
+      {
+         this.speedcontext.fillRect(0,0,25,25); 
+         Nfill++;
+      }
+      this.NleavesSpeedTest=Nfill;
+
+   }, // TreeDrawing.testSpeed
+
+
+
    //-------------------------------------------------------------------
    // Calculate leaf colors for each order
    //-------------------------------------------------------------------
@@ -241,7 +269,9 @@ TreeDrawing.prototype = {
       this.calcNorders();
 
       // Update tree width
-      this.treeProperties.maxTreeWidth=(mnx-5)/(this.treeProperties.Norders+1);  
+      var tNorders=this.treeProperties.Norders;
+      if (tNorders < 4) tNorders=4;
+      this.treeProperties.maxTreeWidth=(mnx-5)/(tNorders+1);  
 
       // Translate points on line to path points to draw thick line
       this.pathpoints=[];
@@ -299,13 +329,21 @@ TreeDrawing.prototype = {
    //-------------------------------------------------------------------
    calcNorders: function(){
 
-      // Use 4 orders for 800 trees, 7 orders for 300 trees
-      // Do linear model, max 7, min 4
+      var maxNleaves=0;
+      if (this.browser == "Chrome") maxNleaves=this.NleavesSpeedTest;
+      else maxNleaves=this.NleavesSpeedTest*10; 
+      
+      // Select how many orders to be able to display trees in less
+      // than the amount of time used for the speed test
       var Ntrees=this.points.length;
-      var slope=(7-4)/(300-800), intercept=7-slope*300;
-      this.treeProperties.Norders=Math.floor(slope*Ntrees+intercept);
-      if (this.treeProperties.Norders < 4) this.treeProperties.Norders=4;
-      if (this.treeProperties.Norders > 7) this.treeProperties.Norders=7;
+      this.treeProperties.Norders=this.treeProperties.maxNorders;
+      var NleavesPerTree=Math.pow(2,this.treeProperties.Norders+1)-1;
+
+      while ((Ntrees*NleavesPerTree) > this.NleavesSpeedTest)
+      {
+         this.treeProperties.Norders--;
+         NleavesPerTree=Math.pow(2,this.treeProperties.Norders+1)-1;
+      }
 
    }, // TreeDrawing.calcNorders
 
