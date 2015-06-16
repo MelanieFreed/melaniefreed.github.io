@@ -13,7 +13,7 @@
       <!-- d3.js -->
       <!-- <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script> -->
       <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
-      <script src="http://d3js.org/topojson.v1.min.js"></script>
+      <!-- <script src="http://d3js.org/topojson.v1.min.js"></script> -->
       <!-- jQuery -->
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 
@@ -42,11 +42,35 @@
          
 
          /////////////////////////////////////////////////////////////////////  
+         // DETECT BROWSER
+         ///////////////////////////////////////////////////////////////////// 
+         dv.Browser=getBrowser();
+
+         function getBrowser() 
+         {  // Courtesy of: http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
+            // Thanks!
+            var ua= navigator.userAgent, tem,
+            M= ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+            if(/trident/i.test(M[1])){
+                tem=  /\brv[ :]+(\d+)/g.exec(ua) || [];
+                return 'IE'; //+(tem[1] || '');
+            }
+            if(M[1]=== 'Chrome'){
+               tem= ua.match(/\b(OPR|Edge)\/(\d+)/);
+               if(tem!= null) return tem.slice(1).join(' ').replace('OPR', 'Opera');
+            }
+            M= M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
+            if((tem= ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
+            return M[0]; //M.join(' ');
+         };
+
+
+         /////////////////////////////////////////////////////////////////////  
          // CREATE PAGE
          ///////////////////////////////////////////////////////////////////// 
 
          // Add Tree Drawing
-         dv.TreeDrawing = new TreeDrawing();
+         dv.TreeDrawing = new TreeDrawing(0,dv.Browser);
 
          // Generate Page Template
          dv.PageMaster = new PageMaster();
@@ -55,10 +79,10 @@
          dv.AboutPage = new AboutPage(dv.PageMaster,dv.TreeDrawing);
 
          // Generate Projects Page
-         dv.Projects = new Projects(dv.PageMaster,dv.AboutPage);
+         dv.Projects = new Projects(dv.PageMaster,dv.AboutPage,dv.Browser);
 
          // Generate Papers Page
-         dv.Papers = new Papers(dv.PageMaster,dv.AboutPage);
+         dv.Papers = new Papers(dv.PageMaster,dv.AboutPage,dv.Browser);
 
          // Control Menu Click Behavior
          
@@ -168,11 +192,11 @@
          /////////////////////////////////////////////////////////////////////  
          // ADD COPYRIGHT SYMBOL
          ///////////////////////////////////////////////////////////////////// 
-         var cr=document.createElement("p"),
-             el=document.getElementById("svg_menu");
-         document.body.insertBefore(cr,el);
-         cr.setAttribute("id","copyright");
-         cr.innerHTML="Copyright \xA9 2015 Melanie Freed";
+         dv.cr=document.createElement("p");
+         dv.el=document.getElementById("svg_menu");
+         document.body.insertBefore(dv.cr,dv.el);
+         dv.cr.setAttribute("id","copyright");
+         dv.cr.innerHTML="Copyright \xA9 2015 Melanie Freed";
          update_copyright();
 
          function update_copyright() {
@@ -183,7 +207,7 @@
             // detach copyright (so that it's position is not included in context size)
             function first() 
             {
-               cr.parentNode.removeChild(cr);
+               dv.cr.parentNode.removeChild(dv.cr);
                d1.resolve();
             }
             function second()
@@ -198,11 +222,11 @@
                    msize=fsize/2;
                var value="margin: "+msize+"px "+msize+"px "+msize+"px "+msize+"px; "+
                           "position: absolute; top: "+(ht-fsize-msize*2)+"px; left: 0; text-align: start; line-height: 1.0; font-size: "+fsize+"px;";
-               cr.setAttribute("style",value);
+               dv.cr.setAttribute("style",value);
 
                // Reattach copyright
                var ref=document.getElementById("svg_menu");
-               document.body.insertBefore(cr,ref);
+               document.body.insertBefore(dv.cr,ref);
             }
          }
          

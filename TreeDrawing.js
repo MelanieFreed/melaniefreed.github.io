@@ -3,10 +3,11 @@
 // TREEDRAWING
 // Draws canvas with Pythagorean Trees
 ///////////////////////////////////////////////////////////////////// 
-var TreeDrawing = function(pagetop)
+var TreeDrawing = function(pagetop,browser)
 {
    // Set default
    this.pagetop=pagetop || 0;
+   this.browser=browser;
 
    // Monitor status
    this.created=false;
@@ -60,9 +61,13 @@ var TreeDrawing = function(pagetop)
 
    
    // Anytime the mouse moves in the home, adjust the trees
-   var thishandle=this; // Because this will be reset to canvas inside next line of code
-   this.listener_mousemove=function(event){thishandle.adjustTrees(event);}
-   this.canvas.addEventListener("mousemove",thishandle.listener_mousemove);      
+   // But only in Chrome, otherwise it will be too slow
+   if (this.browser == "Chrome")
+   {
+      var thishandle=this; // Because this will be reset to canvas inside next line of code
+      this.listener_mousemove=function(event){thishandle.adjustTrees(event);}
+      this.canvas.addEventListener("mousemove",thishandle.listener_mousemove);      
+   }
 
    // Redraw canvas (use, for example, when window resizes)
    this.redrawCanvas();         
@@ -576,7 +581,30 @@ TreeDrawing.prototype = {
       // Draw a forest of trees on the canvas
       this.addForest();
 
+      // Add browser warning
+      if (this.browser != "Chrome") this.addBrowserWarning(); 
+
    }, // TreeDrawing.redrawCanvas
+
+
+
+   //-------------------------------------------------------------------
+   // Add browser warning
+   //-------------------------------------------------------------------
+   addBrowserWarning: function()
+   {
+      var aw=this.canvasParams.width;
+      if (aw > this.canvasParams.height*1.25) aw=this.canvasParams.height*1.25;
+      var xpos=aw*3/4;
+
+      this.context.setTransform(1,0,0,1,0,0);
+      var fsize=Math.round(this.canvasParams.height/50);
+      this.context.font=fsize+"px Noto Sans";
+      this.context.textAlign="center";
+      this.context.fillStyle="rgb(25,25,25)";
+      this.context.fillText("Please use Chrome for interactivity.",xpos,this.canvasParams.height-fsize*2);
+
+   }, // TreeDrawing.addBrowserWarning
 
 
 

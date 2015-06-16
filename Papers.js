@@ -2,8 +2,12 @@
 /////////////////////////////////////////////////////////////////////  
 // PAPERS OBJECT
 ///////////////////////////////////////////////////////////////////// 
-var Papers = function(PageMasterHandle,AboutPageHandle)
+var Papers = function(PageMasterHandle,AboutPageHandle,browser)
 {
+
+   // Save browser info
+   this.browser=browser;
+
    // Define Paper Data
    this.definePapers();
 
@@ -413,14 +417,29 @@ Papers.prototype = {
                                "font-size: "+this.fontSize+"px; line-height: 1.0");
 
       // Append container for paper text
-      this.svg.append("foreignObject")
-              .attr("class","papers annotation")
-              .attr("width",this.width-this.fontSize*2)
-              .attr("height",this.headerHeight)
-              .attr("x",this.fontSize)
-              .attr("y",this.fontSize)
-              .append("xhtml:body")
-              .append("xhtml:div");
+      // But Internet Explorer doesn't support foreignObjects
+      //   so just use html for that
+      if (this.browser != "IE")
+      {
+         this.svg.append("foreignObject")
+                 .attr("class","papers annotation")
+                 .attr("width",(this.width-this.fontSize*2)+"px")
+                 .attr("height",this.headerHeight+"px")
+                 .attr("x",this.fontSize+"px")
+                 .attr("y",this.fontSize+"px")
+                 .append("xhtml:body")
+                 .append("xhtml:div");
+      } 
+      else
+      {
+         d3.select("body").append("p")
+                          .attr("class","papers annotation")
+                          .attr("width",(this.width-this.fontSize*2)+"px")
+                          .attr("height",(this.headerHeight)+"px")
+                          .attr("style","position: absolute; top: "+Math.round(this.yoffset+this.fontSize)+"px; left: "+this.fontSize+"px; "+
+                                "margin: 0; "+
+                                "text-align: start; line-height: 1.0; font-size: "+this.fontSize+"px;");
+      }
 
 
       // Create force layout
@@ -493,10 +512,17 @@ Papers.prototype = {
       d3.selectAll(".g.papers.node")
         .on("mouseover",function(d){
            // Show info
-           thishandle.svg.selectAll(".papers.annotation")
-                     .html(d.info);
+           if (thishandle.browser != "IE")
+           {
+              thishandle.svg.selectAll(".papers.annotation")
+                        .html(d.info);
+           } else
+           {
+              d3.selectAll(".papers.annotation").text(d.info);
+           }
            // Jump circle to front
-           this.parentNode.appendChild(this);
+           // But IE apparently has a bug and can't handle this
+           if (thishandle.browser != "IE") this.parentNode.appendChild(this);
            // Make all other circles fade
            thishandle.svg.selectAll(".papers.node.circle")
                      .style("opacity",function(c){
@@ -508,8 +534,14 @@ Papers.prototype = {
         })
         .on("mouseout",function(d){
            // Remove info
-           thishandle.svg.selectAll(".papers.annotation")
-                     .html("");
+           if (thishandle.browser != "IE")
+           {
+              thishandle.svg.selectAll(".papers.annotation")
+                        .html("");
+           } else
+           {
+              d3.selectAll(".papers.annotation").text("");
+           }
            // Unfade circles
            thishandle.svg.selectAll(".papers.node.circle")
                      .style("opacity","1.0");

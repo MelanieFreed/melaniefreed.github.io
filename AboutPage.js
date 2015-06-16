@@ -50,16 +50,16 @@ AboutPage.prototype = {
       this.text2="px\"></a><br>"+
                       "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href=\"https://twitter.com/MelanieFreedNYC\" target=\"_blank\"><img src=\"images/logos/Twitter_logo_blue_sm.png\" alt=\"Twitter\" height=\"";
       this.text3="px\">@MelanieFreedNYC</a><br>"+
-                      "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href=\"https://github.com/MelanieFreed\" target=\"_blank\"><img src=\"images/logos/GitHub_Logo.png\" alt=\"GitHub\" height=\"";
+                      "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href=\"https://github.com/MelanieFreed\" target=\"_blank\"><img src=\"images/logos/GitHub_Logo_sm.png\" alt=\"GitHub\" height=\"";
       this.text4="px\"></a></div><br>"+
                       "This website is hosted on GitHub and takes advantage of Google Fonts.  The design on the home page is a squashed <a href=\"http://en.wikipedia.org/wiki/Logarithmic_spiral\" target=\"_blank\">logarithmic spiral</a> forest of <a href=\"http://en.wikipedia.org/wiki/Pythagoras_tree_%28fractal%29\" target=\"_blank\">Pythagoras trees</a>.  There are ";
 
       this.text5=" trees with a total of ";
-      this.text6=" leaves.  To keep the design responsive with so many elements, pure JavaScript was used to manipulate a canvas and the number of orders used to draw the trees was adjusted based on the window size and the number of trees drawn. <br><br>  The Projects and Papers sections of this website show some of my work.  Projects have been completed using business-friendly technology (JavaScript, d3.js, Python).  Papers are academic research publications that discuss work completed using primarily IDL, C++, scientific computing clusters, Matlab, and LaTeX.  <br><br>  Both sections are presented as a force-directed graph layout with preview images as the nodes.  The link distance indicates how closely related two nodes are by subject matter and the node size is scaled by year of completion.  <br><br>  Hover over nodes for more information and click to reach the corresponding project or paper.";
+      this.text6=" leaves.  To keep the design responsive with so many elements, pure JavaScript was used to manipulate a canvas and the number of orders used to draw the trees was adjusted based on the window size and the number of trees drawn.  Note: Interactivity is currently only available for Chrome.  <br><br>  The Projects and Papers sections of this website show some of my work.  Projects have been completed using business-friendly technology (JavaScript, d3.js, Python).  Papers are academic research publications that discuss work completed using primarily IDL, C++, scientific computing clusters, Matlab, and LaTeX.  <br><br>  Both sections are presented as a force-directed graph layout with preview images as the nodes.  The link distance indicates how closely related two nodes are by subject matter and the node size is scaled by year of completion.  <br><br>  Hover over nodes for more information and click to reach the corresponding project or paper.";
       this.group.append("p")
                 .attr("class","about text")
                 .attr("style","margin: "+this.Margin+"px "+this.Margin+"px "+this.Margin+"px "+this.Margin+"px;") 
-                .html(this.text1+this.imageSize+this.text2+this.imageSize+this.text3+(this.imageSize*1.4)+this.text4+this.Ntrees+this.text5+this.Nleaves+this.text6);
+                .html(this.text1+this.imageSize+this.text2+this.imageSize+this.text3+Math.round(this.imageSize*1.4)+this.text4+this.Ntrees+this.text5+this.Nleaves+this.text6);
 
       this.created=true;
       this.attached=true;
