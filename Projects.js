@@ -51,7 +51,7 @@ Projects.prototype = {
                       info: "An interactive exploration of pedestrian injuries and fatalities in New York City due to motor vehicle collisions. (2015)"};
 
       this.Projects[1]={year: 2015, preview: "images/projects/PredictingServices.png", 
-                      website: "http://bl.ocks.org/MelanieFreed/raw/df87f34ecd3337d17fef/",
+                      website: "http://bl.ocks.org/MelanieFreed/raw/96f1349781e3384614ff/",
                       info: "Results of predicting health services accessed by women using a support vector machine. (2015)"};
 
       this.Nnodes=this.Projects.length;
